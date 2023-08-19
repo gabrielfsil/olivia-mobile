@@ -48,7 +48,7 @@ export function Routes() {
               name="Login"
               component={Login}
               options={{
-                title: "Login",
+                title: "Login"
               }}
             />
             <Stack.Screen

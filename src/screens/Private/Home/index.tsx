@@ -1,5 +1,5 @@
 import { BoxConnect } from "../../../components/BoxConnect";
-import { Button } from "../../../components/Button";
+import { PrimaryButton } from "../../../components/PrimaryButton";
 import { Container } from "./styles";
 
 interface HomeProps {
@@ -11,7 +11,7 @@ export function Home({ navigation, route }: HomeProps) {
   return (
     <Container>
       <BoxConnect />
-      <Button
+      <PrimaryButton
         onPress={() => {
           navigation.navigate("ListDevices");
         }}

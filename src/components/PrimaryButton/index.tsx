@@ -1,11 +1,11 @@
 import { ButtonStyled, TextButtonStyled } from "./styles";
 
-interface ButtonProps {
+interface PrimaryButtonProps {
   onPress: () => void;
   text: string;
 }
 
-export function Button({ onPress, text }: ButtonProps) {
+export function PrimaryButton({ onPress, text }: PrimaryButtonProps) {
   return (
     <ButtonStyled onPress={onPress}>
       <TextButtonStyled>{text}</TextButtonStyled>
