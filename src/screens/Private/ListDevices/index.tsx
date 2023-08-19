@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import useBLE from "../../services/ble";
+import useBLE from "../../../services/ble";
 import { Container, ContentDevice, List, NameDevice } from "./styles";
 
 export function ListDevices() {

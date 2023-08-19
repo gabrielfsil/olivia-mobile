@@ -1,5 +1,5 @@
-import { BoxConnect } from "../../components/BoxConnect";
-import { Button } from "../../components/Button";
+import { BoxConnect } from "../../../components/BoxConnect";
+import { Button } from "../../../components/Button";
 import { Container } from "./styles";
 
 interface HomeProps {
