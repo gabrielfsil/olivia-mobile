@@ -116,7 +116,7 @@ function useBLE(): BluetoothLowEnergyApi {
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
       await deviceConnection.discoverAllServicesAndCharacteristics();
-      await deviceConnection.services()
+      await deviceConnection.services();
       bleManager.stopDeviceScan();
       startStreamingData(deviceConnection);
     } catch (e) {
@@ -144,7 +144,6 @@ function useBLE(): BluetoothLowEnergyApi {
       return -1;
     }
 
-    console.log("Coletado!");
     const rawData = base64.decode(characteristic.value);
     let innerHeartRate: number = -1;
 
@@ -170,6 +169,7 @@ function useBLE(): BluetoothLowEnergyApi {
       );
     } else {
       console.log("No Device Connected");
+      setConnectedDevice(null);
     }
   };
 

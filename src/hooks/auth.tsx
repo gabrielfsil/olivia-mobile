@@ -54,22 +54,26 @@ function AuthProvider({ children }: AuthProviderProps) {
       // const device = localStorage.getItem("@olivia:device");
       const user = JSON.stringify({
         id: "1",
-        name: "Olivia",
-        email: "XXXXXXXXXXXXXXXXX",
+        name: "Gabriel",
+        email: "gabrielfsil264@gmail.com",
         permission: 1,
       });
 
       const device = undefined;
 
       if (user && device) {
+        setData({ user: JSON.parse(user), device: JSON.parse(device) });
         return { user: JSON.parse(user), device: JSON.parse(device) };
       }
 
       if (user) {
+        setData({ user: JSON.parse(user), device: {} as Device });
         return { user: JSON.parse(user), device: {} as Device };
       }
 
+      setData({} as AuthState)
       return {} as AuthState;
+
     } catch (err) {}
   };
 
@@ -93,7 +97,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const updateDevice = async (device: Device) => {
-    localStorage.setItem("@olivia:device", JSON.stringify(device));
+    // localStorage.setItem("@olivia:device", JSON.stringify(device));
 
     setData({ user: data.user, device });
   };

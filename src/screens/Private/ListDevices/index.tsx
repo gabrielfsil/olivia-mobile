@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import useBLE from "../../../services/ble";
 import { Container, ContentDevice, List, NameDevice } from "./styles";
+import { useAuth } from "../../../hooks/auth";
 
 export function ListDevices() {
   const {
@@ -13,6 +14,8 @@ export function ListDevices() {
     heartRate,
   } = useBLE();
 
+  const { updateDevice } = useAuth()
+
   useEffect(() => {
     const scanForDevices = async () => {
       const isPermissionsEnabled = await requestPermissions();
@@ -22,6 +25,15 @@ export function ListDevices() {
     };
     scanForDevices();
   }, []);
+
+  useEffect(() => {
+    if(connectedDevice){
+      updateDevice({
+        name: connectedDevice.name || "Desconhecido",
+        id: connectedDevice.id
+      })
+    }
+  },[connectedDevice]);
 
   return (
     <Container>

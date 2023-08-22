@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@config-plugins/react-native-ble-plx": "^6.0.0",
+    "@react-native-async-storage/async-storage": "1.17.11",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.13",
     "@shopify/react-native-skia": "0.1.172",

@@ -10,7 +10,7 @@ const Stack = createNativeStackNavigator();
 
 export function Routes() {
   const { user } = useAuth();
-
+  
   return (
     <NavigationContainer>
       <Stack.Navigator

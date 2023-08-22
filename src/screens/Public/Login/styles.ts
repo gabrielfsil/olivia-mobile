@@ -50,3 +50,19 @@ export const ButtonFooter = styled.TouchableOpacity`
   margin-bottom: 16px;
   padding: 12px;
 `
+
+export const Header = styled.View`
+  justify-content: flex-end;
+`
+
+export const ButtonHeader = styled.TouchableOpacity`
+  background: transparent;
+  margin-bottom: 16px;
+  margin-left: auto;
+  padding: 12px;
+`
+
+export const TextButtonHeader = styled.Text`
+  font-size: 12px;
+  color: ${({ theme }) => theme.COLORS.TEXT_PRIMARY};
+`

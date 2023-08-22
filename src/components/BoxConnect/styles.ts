@@ -7,7 +7,8 @@ export const BoxStyled = styled.View`
   border-width: 1px;
   border-style: solid;
   border-color: ${({ theme }) => theme.COLORS.TEXT_PRIMARY};
-  margin: 4px 0px;
+  margin-left: 4px;
+  margin-right: 4px;
   flex-direction: row;
 `;
 
