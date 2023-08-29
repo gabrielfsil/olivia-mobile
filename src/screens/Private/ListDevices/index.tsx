@@ -1,9 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useBLE from "../../../services/ble";
 import { Container, ContentDevice, List, NameDevice } from "./styles";
 import { useAuth } from "../../../hooks/auth";
 
-export function ListDevices() {
+interface ListDevicesProps {
+  navigation: any;
+}
+
+export function ListDevices({ navigation }: ListDevicesProps) {
   const {
     allDevices,
     requestPermissions,
@@ -13,8 +17,10 @@ export function ListDevices() {
     connectedDevice,
     heartRate,
   } = useBLE();
+  
+  const [loading, setLoading ] = useState<boolean>(false)
 
-  const { updateDevice } = useAuth()
+  const { updateDevice } = useAuth();
 
   useEffect(() => {
     const scanForDevices = async () => {
@@ -27,13 +33,10 @@ export function ListDevices() {
   }, []);
 
   useEffect(() => {
-    if(connectedDevice){
-      updateDevice({
-        name: connectedDevice.name || "Desconhecido",
-        id: connectedDevice.id
-      })
+    if (connectedDevice) {  
+      updateDevice(connectedDevice);
     }
-  },[connectedDevice]);
+  }, [connectedDevice]);
 
   return (
     <Container>
@@ -41,11 +44,14 @@ export function ListDevices() {
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }: { item: any }) => (
           <ContentDevice
-            onPress={() => {
-              connectToDevice(item);
+            onPress={async () => {
+              setLoading(true)
+              await connectToDevice(item);
+              setLoading(false)
+              navigation.navigate("Home");
             }}
           >
-            <NameDevice>{item.name}</NameDevice>
+            <NameDevice>{item && item.name}</NameDevice>
           </ContentDevice>
         )}
         data={allDevices}

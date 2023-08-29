@@ -20,8 +20,8 @@ export function BoxConnect({}: BoxConnect) {
         <Ionicons name="watch" size={56} color={"#FFFFFF"} />
       </IconSmartwatch>
       <ContentText>
-        <Title>{device.name ? device.name.toUpperCase(): "Nenhum dispositivo"}</Title>
-        <TextStatus>{device.id ? "CONECTADO" : "-"}</TextStatus>
+        <Title>{device ? device.name && device.name.toUpperCase(): "Nenhum dispositivo"}</Title>
+        <TextStatus>{device ? "CONECTADO" : "-"}</TextStatus>
       </ContentText>
     </BoxStyled>
   );

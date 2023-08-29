@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-
+import { Device } from "react-native-ble-plx"
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -9,11 +9,6 @@ interface User {
   name: string;
   email: string;
   permission: number;
-}
-
-interface Device {
-  id: string;
-  name: string;
 }
 
 interface AuthState {
@@ -28,9 +23,9 @@ interface SignInCredentials {
 
 interface AuthContextProps {
   user: User;
-  device: Device;
+  device: Device | null;
   signIn(credentials: SignInCredentials): Promise<void>;
-  updateDevice(device: Device): Promise<void>;
+  updateDevice(device: Device | null): Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);

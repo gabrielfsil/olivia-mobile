@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from "react";
 import { BoxConnect } from "../../../components/BoxConnect";
 import { PrimaryButton } from "../../../components/PrimaryButton";
 import { useAuth } from "../../../hooks/auth";
@@ -11,7 +12,6 @@ interface HomeProps {
 
 export function Home({ navigation, route }: HomeProps) {
   const { user, device, updateDevice } = useAuth();
-
   const { disconnectFromDevice } = useBLE();
 
   return (
@@ -25,16 +25,17 @@ export function Home({ navigation, route }: HomeProps) {
       <Content>
         <BoxConnect />
       </Content>
+
       <PrimaryButton
         onPress={() => {
-          if (device.id) {
+          if (device && device.id) {
             disconnectFromDevice();
-            updateDevice({ id: "", name: "" });
+            updateDevice(null);
           } else {
             navigation.navigate("ListDevices");
           }
         }}
-        text={device.id ? "Desconectar" : "Conectar"}
+        text={device ? "Desconectar" : "Conectar"}
       />
     </Container>
   );
