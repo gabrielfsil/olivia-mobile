@@ -13,7 +13,7 @@ interface User {
 
 interface AuthState {
   user: User;
-  device: Device;
+  device: Device | null;
 }
 
 interface SignInCredentials {
@@ -62,8 +62,8 @@ function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (user) {
-        setData({ user: JSON.parse(user), device: {} as Device });
-        return { user: JSON.parse(user), device: {} as Device };
+        setData({ user: JSON.parse(user), device: null });
+        return { user: JSON.parse(user), device: null };
       }
 
       setData({} as AuthState)
@@ -88,7 +88,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     // localStorage.setItem("@olivia:user", JSON.stringify(user));
     // localStorage.setItem("@olivia:device", JSON.stringify({} as Device));
 
-    setData({ user, device: {} as Device });
+    setData({ user, device: null });
   };
 
   const updateDevice = async (device: Device) => {

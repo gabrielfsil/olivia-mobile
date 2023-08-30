@@ -12,13 +12,19 @@ interface HomeProps {
 
 export function Home({ navigation, route }: HomeProps) {
   const { user, device, updateDevice } = useAuth();
-  const { disconnectFromDevice } = useBLE();
+  const { disconnectFromDevice, startStreamingData } = useBLE();
 
   return (
     <Container>
       <Header>
         <Text>{user.name}</Text>
-        <ExitButton onPress={() => {}}>
+        <ExitButton
+          onPress={() => {
+            if (device) {
+              startStreamingData(device);
+            }
+          }}
+        >
           <Ionicons name="exit-outline" size={24} color="black" />
         </ExitButton>
       </Header>

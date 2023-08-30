@@ -17,8 +17,8 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     connectedDevice,
     heartRate,
   } = useBLE();
-  
-  const [loading, setLoading ] = useState<boolean>(false)
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   const { updateDevice } = useAuth();
 
@@ -26,14 +26,18 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     const scanForDevices = async () => {
       const isPermissionsEnabled = await requestPermissions();
       if (isPermissionsEnabled) {
-        scanForPeripherals();
+        const result = await scanForPeripherals();
+
+        if (!result) {
+          navigation.navigate("Home");
+        }
       }
     };
     scanForDevices();
   }, []);
 
   useEffect(() => {
-    if (connectedDevice) {  
+    if (connectedDevice) {
       updateDevice(connectedDevice);
     }
   }, [connectedDevice]);
@@ -45,9 +49,9 @@ export function ListDevices({ navigation }: ListDevicesProps) {
         renderItem={({ item }: { item: any }) => (
           <ContentDevice
             onPress={async () => {
-              setLoading(true)
+              setLoading(true);
               await connectToDevice(item);
-              setLoading(false)
+              setLoading(false);
               navigation.navigate("Home");
             }}
           >

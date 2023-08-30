@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 import { useMemo, useState } from "react";
-import { PermissionsAndroid, Platform } from "react-native";
+import { PermissionsAndroid, Platform, Alert } from "react-native";
 import {
   BleError,
   BleManager,
@@ -19,10 +19,11 @@ const HEART_RATE_TRANSACTION = "heart_rate";
 
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
-  scanForPeripherals(): void;
+  scanForPeripherals(): Promise<boolean>;
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
   cancelTransaction: () => void;
+  startStreamingData: (device: Device) => Promise<any>;
   connectedDevice: Device | null;
   allDevices: Device[];
   heartRate: number;
@@ -103,6 +104,17 @@ function useBLE(): BluetoothLowEnergyApi {
     devices.findIndex((device) => nextDevice.id === device.id) > -1;
 
   const scanForPeripherals = async () => {
+    const state = await bleManager.state();
+
+    if (state !== "PoweredOn") {
+      Alert.alert(
+        "Bluetooth Desativado",
+        "O bluetooth precisa ficar ligado para que os dados coletados no dispositivo possam ser coletados",
+        [{ text: "OK", onPress: () => {} }]
+      );
+      return false;
+    }
+
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
         console.log(error);
@@ -116,7 +128,10 @@ function useBLE(): BluetoothLowEnergyApi {
         });
       }
     });
+
+    return true;
   };
+
   const connectToDevice = async (device: Device) => {
     try {
       if (!connectedDevice) {
@@ -128,9 +143,11 @@ function useBLE(): BluetoothLowEnergyApi {
 
         await deviceConnection.services();
 
-        startStreamingData(deviceConnection);
-
         bleManager.stopDeviceScan();
+
+        const subscription = await startStreamingData(deviceConnection);
+
+        console.log(subscription);
       }
     } catch (e) {
       console.log("FAILED TO CONNECT", e);
@@ -156,11 +173,19 @@ function useBLE(): BluetoothLowEnergyApi {
   ) => {
     if (error) {
       console.log(error);
-      setConnectedDevice(null);
+      Alert.alert(
+        "Erro ao ler o BPM",
+        "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
+        [{ text: "OK", onPress: () => {} }]
+      );
       return -1;
     } else if (!characteristic?.value) {
       console.log("No Data was recieved");
-      setConnectedDevice(null);
+      Alert.alert(
+        "Erro ao ler o BPM",
+        "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
+        [{ text: "OK", onPress: () => {} }]
+      );
       return -1;
     }
 
@@ -184,12 +209,19 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const startStreamingData = async (device: Device) => {
     if (device) {
-      device.monitorCharacteristicForService(
-        HEART_RATE_UUID,
-        HEART_RATE_CHARACTERISTIC,
-        onHeartRateUpdate,
-        HEART_RATE_TRANSACTION
-      );
+      const isConnected = await device.isConnected();
+      if (isConnected) {
+        const subscription = device.monitorCharacteristicForService(
+          HEART_RATE_UUID,
+          HEART_RATE_CHARACTERISTIC,
+          onHeartRateUpdate
+        );
+
+        return subscription;
+      } else {
+        await scanForPeripherals();
+        await connectToDevice(device);
+      }
     } else {
       console.log("No Device Connected");
       setConnectedDevice(null);
@@ -205,6 +237,7 @@ function useBLE(): BluetoothLowEnergyApi {
     disconnectFromDevice,
     heartRate,
     cancelTransaction,
+    startStreamingData,
   };
 }
 
