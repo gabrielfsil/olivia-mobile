@@ -1,0 +1,172 @@
+{
+  "services": [
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 1,
+      "isPrimary": true,
+      "uuid": "00001800-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 5,
+      "isPrimary": true,
+      "uuid": "00001801-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 6,
+      "isPrimary": true,
+      "uuid": "0000180a-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 14,
+      "isPrimary": true,
+      "uuid": "00001530-0000-3512-2118-0009af100700"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 18,
+      "isPrimary": true,
+      "uuid": "00001811-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 23,
+      "isPrimary": true,
+      "uuid": "00001802-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 25,
+      "isPrimary": true,
+      "uuid": "0000180d-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 29,
+      "isPrimary": true,
+      "uuid": "0000fee0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 68,
+      "isPrimary": true,
+      "uuid": "0000fee1-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 80,
+      "isPrimary": true,
+      "uuid": "0000180f-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 83,
+      "isPrimary": true,
+      "uuid": "00001812-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "_manager": {
+        "_activePromises": "[Object]",
+        "_activeSubscriptions": "[Object]",
+        "_errorCodesToMessagesMapping": "[Object]",
+        "_eventEmitter": "[NativeEventEmitter]",
+        "_scanEventSubscription": "[Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 97,
+      "isPrimary": true,
+      "uuid": "00003802-0000-1000-8000-00805f9b34fb"
+    }
+  ]
+}

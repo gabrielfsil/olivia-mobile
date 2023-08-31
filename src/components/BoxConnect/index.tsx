@@ -11,8 +11,9 @@ import { useAuth } from "../../hooks/auth";
 interface BoxConnect {}
 
 export function BoxConnect({}: BoxConnect) {
-
   const { device } = useAuth();
+
+  console.log(device);
 
   return (
     <BoxStyled>
@@ -20,7 +21,11 @@ export function BoxConnect({}: BoxConnect) {
         <Ionicons name="watch" size={56} color={"#FFFFFF"} />
       </IconSmartwatch>
       <ContentText>
-        <Title>{device ? device.name && device.name.toUpperCase(): "Nenhum dispositivo"}</Title>
+        <Title>
+          {device
+            ? device.name && device.name.toUpperCase()
+            : "Nenhum dispositivo"}
+        </Title>
         <TextStatus>{device ? "CONECTADO" : "-"}</TextStatus>
       </ContentText>
     </BoxStyled>
