@@ -13,8 +13,6 @@ interface BoxConnect {}
 export function BoxConnect({}: BoxConnect) {
   const { device } = useAuth();
 
-  console.log(device);
-
   return (
     <BoxStyled>
       <IconSmartwatch>

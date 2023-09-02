@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Device } from "react-native-ble-plx"
+import { Device } from "react-native-ble-plx";
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -12,7 +12,7 @@ interface User {
 }
 
 interface AuthState {
-  user: User;
+  user: User | null;
   device: Device | null;
 }
 
@@ -22,9 +22,10 @@ interface SignInCredentials {
 }
 
 interface AuthContextProps {
-  user: User;
+  user: User | null;
   device: Device | null;
   signIn(credentials: SignInCredentials): Promise<void>;
+  signOut(): Promise<void>;
   updateDevice(device: Device | null): Promise<void>;
 }
 
@@ -47,12 +48,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     try {
       // const user = localStorage.getItem("@olivia:user");
       // const device = localStorage.getItem("@olivia:device");
-      const user = JSON.stringify({
-        id: "1",
-        name: "Gabriel",
-        email: "gabrielfsil264@gmail.com",
-        permission: 1,
-      });
+      const user = undefined;
 
       const device = undefined;
 
@@ -66,9 +62,8 @@ function AuthProvider({ children }: AuthProviderProps) {
         return { user: JSON.parse(user), device: null };
       }
 
-      setData({} as AuthState)
+      setData({} as AuthState);
       return {} as AuthState;
-
     } catch (err) {}
   };
 
@@ -80,8 +75,8 @@ function AuthProvider({ children }: AuthProviderProps) {
     // Requisição de Login
     const user = {
       id: "1",
-      name: "Olivia",
-      email: "XXXXXXXXXXXXXXXXX",
+      name: "Gabriel",
+      email,
       permission: 1,
     };
 
@@ -89,6 +84,13 @@ function AuthProvider({ children }: AuthProviderProps) {
     // localStorage.setItem("@olivia:device", JSON.stringify({} as Device));
 
     setData({ user, device: null });
+  };
+
+  const signOut = async () => {
+    // localStorage.setItem("@olivia:user", JSON.stringify(user));
+    // localStorage.setItem("@olivia:device", JSON.stringify({} as Device));
+
+    setData({ user: null, device: null });
   };
 
   const updateDevice = async (device: Device) => {
@@ -103,6 +105,7 @@ function AuthProvider({ children }: AuthProviderProps) {
         user: data.user,
         device: data.device,
         signIn,
+        signOut,
         updateDevice,
       }}
     >

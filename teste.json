@@ -168,5 +168,51 @@
       "isPrimary": true,
       "uuid": "00003802-0000-1000-8000-00805f9b34fb"
     }
+  ],
+  "char": [
+    {
+      "_manager": {
+        "_activePromises": " [Object]",
+        "_activeSubscriptions": " [Object]",
+        "_errorCodesToMessagesMapping": " [Object]",
+        "_eventEmitter": " [NativeEventEmitter]",
+        "_scanEventSubscription": " [Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 26,
+      "isIndicatable": false,
+      "isNotifiable": true,
+      "isNotifying": false,
+      "isReadable": false,
+      "isWritableWithResponse": false,
+      "isWritableWithoutResponse": false,
+      "serviceID": 25,
+      "serviceUUID": "0000180d-0000-1000-8000-00805f9b34fb",
+      "uuid": "00002a37-0000-1000-8000-00805f9b34fb",
+      "value": null
+    },
+    {
+      "_manager": {
+        "_activePromises": " [Object]",
+        "_activeSubscriptions": " [Object]",
+        "_errorCodesToMessagesMapping": " [Object]",
+        "_eventEmitter": " [NativeEventEmitter]",
+        "_scanEventSubscription": " [Object]",
+        "_uniqueId": 5
+      },
+      "deviceID": "D3:52:0D:B2:BE:36",
+      "id": 28,
+      "isIndicatable": false,
+      "isNotifiable": false,
+      "isNotifying": false,
+      "isReadable": true,
+      "isWritableWithResponse": true,
+      "isWritableWithoutResponse": false,
+      "serviceID": 25,
+      "serviceUUID": "0000180d-0000-1000-8000-00805f9b34fb",
+      "uuid": "00002a39-0000-1000-8000-00805f9b34fb",
+      "value": null
+    }
   ]
 }

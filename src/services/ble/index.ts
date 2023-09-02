@@ -16,8 +16,6 @@ import base64 from "react-native-base64";
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
 
-const HEART_RATE_TRANSACTION = "heart_rate";
-
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
   scanForPeripherals(): Promise<boolean>;
@@ -136,37 +134,20 @@ function useBLE(): BluetoothLowEnergyApi {
   const connectToDevice = async (device: Device) => {
     try {
       if (!connectedDevice) {
-        // const deviceConnection = await bleManager.connectToDevice(device.id);
-
-        // setConnectedDevice(deviceConnection);
-
-        // await deviceConnection.discoverAllServicesAndCharacteristics();
-
-        // await deviceConnection.services();
-
-        // bleManager.stopDeviceScan();
-
-        // const subscription = await startStreamingData(deviceConnection);
-
-        // console.log(subscription);
-        device
-          .connect({
+        setConnectedDevice(device);
+        bleManager
+          .connectToDevice(device.id, {
             autoConnect: true,
-            timeout: 100000,
           })
           .then((device) => {
-            setConnectedDevice(device);
             console.log("CONNECTED");
             return device.discoverAllServicesAndCharacteristics();
           })
           .then(async (device) => {
             console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
-            console.log(await device.services());
-            return startStreamingData(device);
-          })
-          .then((sub) => {
-            console.log("START STREAMING DATA");
-            setSubscription(sub ? sub : null);
+            bleManager.stopDeviceScan();
+            startStreamingData(device);
+            return;
           })
           .catch((e) => {
             console.log("FAILED TO CONNECT", e);
@@ -187,6 +168,15 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
+  const checkConnectionStatus = async () => {
+    if (connectedDevice) {
+      const isConnected = await connectedDevice.isConnected();
+      console.log("isConnected: ", isConnected);
+      return isConnected ? connectedDevice : null;
+    }
+    return null;
+  };
+
   const onHeartRateUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null
@@ -196,7 +186,23 @@ function useBLE(): BluetoothLowEnergyApi {
       Alert.alert(
         "Erro ao ler o BPM",
         "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
-        [{ text: "OK", onPress: () => {} }]
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              checkConnectionStatus().then((device) => {
+                if (device) {
+                  console.log("Connection is still alive");
+                  subscription?.remove();
+                  startStreamingData(device);
+                } else {
+                  console.log("Connection is dead");
+                  disconnectFromDevice();
+                }
+              });
+            },
+          },
+        ]
       );
       return;
     } else if (!characteristic?.value) {
@@ -224,14 +230,13 @@ function useBLE(): BluetoothLowEnergyApi {
 
     console.log("Heart Rate: ", innerHeartRate);
     console.log("Timestamp: ", new Date());
-    setHeartRate(innerHeartRate);
   };
 
   const startStreamingData = async (device: Device) => {
     if (device) {
       const isConnected = await device.isConnected();
       if (isConnected) {
-        const subscription = device.monitorCharacteristicForService(
+        const subs = device.monitorCharacteristicForService(
           HEART_RATE_UUID,
           HEART_RATE_CHARACTERISTIC,
           onHeartRateUpdate
@@ -240,17 +245,50 @@ function useBLE(): BluetoothLowEnergyApi {
         device.onDisconnected((error, device) => {
           if (error) {
             console.log("Error: ", error);
-            return;
           }
-          console.log("Disconnected from device");
-          subscription.remove();
-          connectToDevice(device);
-        });
 
-        return subscription;
+          console.log("Disconnected from device");
+          subs.remove();
+          setConnectedDevice(null);
+          checkConnectionStatus()
+            .then((isConnected) => {
+              if (!isConnected) {
+                connectToDevice(device)
+                  .then(() => {
+                    console.log("Connection recreated");
+                  })
+                  .catch((err) => {
+                    console.log("Failed to recreate connection");
+                    console.log(err);
+                  });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        });
+        if (subscription) {
+          subscription.remove();
+        }
+        setSubscription(subs);
+        return subs;
       } else {
-        await scanForPeripherals();
-        await connectToDevice(device);
+        scanForPeripherals()
+          .then((status) => {
+            if (status) {
+              connectToDevice(device)
+                .then(() => {
+                  console.log("Connection recreated");
+                })
+                .catch((err) => {
+                  console.log("Failed to recreate connection");
+                  console.log(err);
+                });
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       }
     } else {
       console.log("No Device Connected");

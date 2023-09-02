@@ -48,14 +48,14 @@ export function Routes() {
               name="Login"
               component={Login}
               options={{
-                title: "Login"
+                title: ""
               }}
             />
             <Stack.Screen
               name="Register"
               component={Register}
               options={{
-                title: "Registe-se",
+                title: "Registre-se",
               }}
             />
           </Stack.Group>

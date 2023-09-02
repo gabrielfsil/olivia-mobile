@@ -1,4 +1,5 @@
 import { SecondaryButton } from "../../../components/SecondaryButton";
+import { useAuth } from "../../../hooks/auth";
 import {
   ButtonFooter,
   ButtonHeader,
@@ -18,6 +19,7 @@ interface LoginProps {
 }
 
 export function Login({ navigation }: LoginProps) {
+  const { signIn } = useAuth();
   return (
     <Container>
       <Header>
@@ -32,14 +34,21 @@ export function Login({ navigation }: LoginProps) {
         <Input placeholder="Senha" />
         <SecondaryButton
           text="Entrar"
-          onPress={() => {
+          onPress={async () => {
+            await signIn({
+              email: "gabriel@gmail.com",
+              password: "XXXXXX",
+            });
             navigation.navigate("Home");
-            console.log("Login realizado");
           }}
         />
       </Content>
       <Footer>
-        <ButtonFooter onPress={() => {}}>
+        <ButtonFooter
+          onPress={() => {
+            navigation.navigate("Register");
+          }}
+        >
           <Text>Não tem uma conta? Registre-se!</Text>
         </ButtonFooter>
       </Footer>

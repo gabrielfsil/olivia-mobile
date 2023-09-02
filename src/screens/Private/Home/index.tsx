@@ -1,4 +1,3 @@
-import { useCallback, useEffect } from "react";
 import { BoxConnect } from "../../../components/BoxConnect";
 import { PrimaryButton } from "../../../components/PrimaryButton";
 import { useAuth } from "../../../hooks/auth";
@@ -11,18 +10,16 @@ interface HomeProps {
 }
 
 export function Home({ navigation, route }: HomeProps) {
-  const { user, device, updateDevice } = useAuth();
-  const { disconnectFromDevice, startStreamingData } = useBLE();
+  const { user, device, updateDevice, signOut } = useAuth();
+  const { disconnectFromDevice } = useBLE();
 
   return (
     <Container>
       <Header>
-        <Text>{user.name}</Text>
+        <Text>Olá, {user ? user.name : "Visitante"}</Text>
         <ExitButton
           onPress={() => {
-            if (device) {
-              startStreamingData(device);
-            }
+            signOut();
           }}
         >
           <Ionicons name="exit-outline" size={24} color="black" />
@@ -30,19 +27,18 @@ export function Home({ navigation, route }: HomeProps) {
       </Header>
       <Content>
         <BoxConnect />
+        <PrimaryButton
+          onPress={() => {
+            if (device && device.id) {
+              disconnectFromDevice();
+              updateDevice(null);
+            } else {
+              navigation.navigate("ListDevices");
+            }
+          }}
+          text={device ? "Desconectar" : "Conectar"}
+        />
       </Content>
-
-      <PrimaryButton
-        onPress={() => {
-          if (device && device.id) {
-            disconnectFromDevice();
-            updateDevice(null);
-          } else {
-            navigation.navigate("ListDevices");
-          }
-        }}
-        text={device ? "Desconectar" : "Conectar"}
-      />
     </Container>
   );
 }
