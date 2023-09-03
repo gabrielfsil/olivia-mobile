@@ -162,9 +162,10 @@ function useBLE(): BluetoothLowEnergyApi {
   const disconnectFromDevice = () => {
     if (connectedDevice) {
       subscription?.remove();
-      bleManager.cancelDeviceConnection(connectedDevice.id);
-      setConnectedDevice(null);
-      setHeartRate(0);
+      connectedDevice.cancelConnection().then(() => {
+        setConnectedDevice(null);
+        console.log("DISCONNECTED");
+      });
     }
   };
 

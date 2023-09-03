@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Device } from "react-native-ble-plx";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -27,6 +28,7 @@ interface AuthContextProps {
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): Promise<void>;
   updateDevice(device: Device | null): Promise<void>;
+  updateUser(user: User): Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
@@ -46,11 +48,8 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const updateContext = async () => {
     try {
-      // const user = localStorage.getItem("@olivia:user");
-      // const device = localStorage.getItem("@olivia:device");
-      const user = undefined;
-
-      const device = undefined;
+      const user = await AsyncStorage.getItem("@olivia:user");
+      const device = await AsyncStorage.getItem("@olivia:device");
 
       if (user && device) {
         setData({ user: JSON.parse(user), device: JSON.parse(device) });
@@ -80,23 +79,28 @@ function AuthProvider({ children }: AuthProviderProps) {
       permission: 1,
     };
 
-    // localStorage.setItem("@olivia:user", JSON.stringify(user));
-    // localStorage.setItem("@olivia:device", JSON.stringify({} as Device));
+    await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
 
     setData({ user, device: null });
   };
 
   const signOut = async () => {
-    // localStorage.setItem("@olivia:user", JSON.stringify(user));
-    // localStorage.setItem("@olivia:device", JSON.stringify({} as Device));
+    await AsyncStorage.setItem("@olivia:user", "");
+    await AsyncStorage.setItem("@olivia:device", "");
 
     setData({ user: null, device: null });
   };
 
   const updateDevice = async (device: Device) => {
-    // localStorage.setItem("@olivia:device", JSON.stringify(device));
+    await AsyncStorage.setItem("@olivia:device", JSON.stringify(device));
 
     setData({ user: data.user, device });
+  };
+
+  const updateUser = async (user: User) => {
+    await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
+
+    setData({ user, device: data.device });
   };
 
   return (
@@ -107,6 +111,7 @@ function AuthProvider({ children }: AuthProviderProps) {
         signIn,
         signOut,
         updateDevice,
+        updateUser,
       }}
     >
       {children}

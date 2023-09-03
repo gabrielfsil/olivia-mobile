@@ -1,21 +1,22 @@
-import Realm from "realm";
+import { GeoPosition } from "realm";
 
-class HeartBeat extends Realm.Object<HeartBeat> {
+
+class Position extends Realm.Object<Position> {
   _id!: Realm.BSON.ObjectId;
-  heart_rate!: number;
+  coordinates!: GeoPosition;
   created_at!: Date;
   user_id!: Realm.BSON.ObjectId;
 
   static schema: Realm.ObjectSchema = {
-    name: "HeartBeats",
+    name: "Positions",
     primaryKey: "_id",
     properties: {
       _id: "objectId",
-      heart_rate: "int",
+      coordinates: "double[]",
       created_at: { type: "date", indexed: true },
       user_id: "objectId",
     },
   };
 }
 
-export { HeartBeat };
+export { Position}
