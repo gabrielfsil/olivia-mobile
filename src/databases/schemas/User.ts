@@ -6,7 +6,7 @@ class User extends Realm.Object<User> {
   email!: string;
   password!: string;
   created_at!: Date;
-  permissions!: string;
+  permissions!: number;
   born_date!: Date;
 
   static schema: Realm.ObjectSchema = {
@@ -18,7 +18,7 @@ class User extends Realm.Object<User> {
       email: "string",
       password: "string",
       created_at: "date",
-      permissions: "string",
+      permissions: "int",
       born_date: "date",
     },
   };

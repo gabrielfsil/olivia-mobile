@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Device } from "react-native-ble-plx";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../services/api";
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -72,16 +73,21 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async ({ email, password }: SignInCredentials) => {
     // Requisição de Login
-    const user = {
-      id: "1",
-      name: "Gabriel",
-      email,
-      permission: 1,
-    };
 
-    await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
+    api
+      .post("/users/session", { email, password })
+      .then(async (response) => {
+        const { token, user } = response.data;
 
-    setData({ user, device: null });
+        await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
+        api.defaults.headers.authorization = `Bearer ${token}`;
+        setData({ user, device: null });
+        
+        return response.data;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const signOut = async () => {

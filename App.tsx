@@ -1,3 +1,5 @@
+import Realm from "realm";
+Realm.flags.THROW_ON_GLOBAL_REALM = true
 import { ThemeProvider } from "styled-components/native";
 import light from "./src/theme/light";
 import { Routes } from "./src/Routes";
