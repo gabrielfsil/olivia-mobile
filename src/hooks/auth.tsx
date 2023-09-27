@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Device } from "react-native-ble-plx";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api } from "../services/api";
+import axios from "axios";
+import { API_URL } from "@env";
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -11,6 +12,7 @@ interface User {
   name: string;
   email: string;
   permission: number;
+  token: string;
 }
 
 interface AuthState {
@@ -72,21 +74,29 @@ function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signIn = async ({ email, password }: SignInCredentials) => {
-    try {
-      const response = await api.post("/users/session", { email, password });
+    const response = await axios({
+      method: "POST",
+      url: `${API_URL}/users/session`,
+      data: { email, password },
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
 
-      const { token, user } = response.data;
+    const { token, user } = response.data;
 
-      await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
+    await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
 
-      api.defaults.headers.authorization = `Bearer ${token}`;
-      
-      setData({ user, device: null });
+    setData({
+      user: {
+        ...user,
+        token,
+      },
+      device: null,
+    });
 
-      return response.data;
-    } catch (err) {
-      console.log(err);
-    }
+    return response.data;
   };
 
   const signOut = async () => {

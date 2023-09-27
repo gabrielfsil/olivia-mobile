@@ -22,16 +22,15 @@ interface BluetoothLowEnergyApi {
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
   startStreamingData: (device: Device) => Promise<any>;
+  listServices: (device: Device) => Promise<any>;
   connectedDevice: Device | null;
   allDevices: Device[];
-  heartRate: number;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [heartRate, setHeartRate] = useState<number>(0);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const requestAndroid31Permissions = async () => {
@@ -134,19 +133,15 @@ function useBLE(): BluetoothLowEnergyApi {
   const connectToDevice = async (device: Device) => {
     try {
       if (!connectedDevice) {
-        setConnectedDevice(device);
+        
         bleManager
           .connectToDevice(device.id, {
             autoConnect: true,
           })
           .then((device) => {
             console.log("CONNECTED");
-            return device.discoverAllServicesAndCharacteristics();
-          })
-          .then(async (device) => {
-            console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
             bleManager.stopDeviceScan();
-            startStreamingData(device);
+            setConnectedDevice(device);
             return;
           })
           .catch((e) => {
@@ -157,6 +152,23 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log("FAILED TO CONNECT", e);
       await connectToDevice(device);
     }
+  };
+
+  const listServices = async (device: Device) => {
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log(error);
+      }
+    });
+    setTimeout(() => {
+      device.discoverAllServicesAndCharacteristics().then(async (device) => {
+        console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
+        bleManager.stopDeviceScan();
+        const services = await device.services();
+        console.log("SERVICES", services);
+        return services;
+      });
+    }, 3000);
   };
 
   const disconnectFromDevice = () => {
@@ -299,12 +311,12 @@ function useBLE(): BluetoothLowEnergyApi {
 
   return {
     scanForPeripherals,
+    listServices,
     requestPermissions,
     connectToDevice,
     allDevices,
     connectedDevice,
     disconnectFromDevice,
-    heartRate,
     startStreamingData,
   };
 }

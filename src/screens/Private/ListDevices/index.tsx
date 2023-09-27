@@ -13,9 +13,7 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     requestPermissions,
     scanForPeripherals,
     connectToDevice,
-    disconnectFromDevice,
     connectedDevice,
-    heartRate,
   } = useBLE();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -52,7 +50,7 @@ export function ListDevices({ navigation }: ListDevicesProps) {
               setLoading(true);
               await connectToDevice(item);
               setLoading(false);
-              navigation.navigate("Home");
+              navigation.navigate("ListServices");
             }}
           >
             <NameDevice>{item && item.name}</NameDevice>

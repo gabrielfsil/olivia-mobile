@@ -20,6 +20,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCallback } from "react";
 import { Alert } from "react-native";
+import { AxiosError } from "axios";
 
 interface LoginProps {
   navigation: any;
@@ -58,9 +59,7 @@ export function Login({ navigation }: LoginProps) {
           email: data.email,
           password: data.password,
         });
-        navigation.navigate("Home");
-      } catch (err) {
-        console.log(err);
+      } catch (err: AxiosError<any> | any) {
         Alert.alert("Email/Senha inválidos");
       }
     },
