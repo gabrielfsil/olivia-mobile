@@ -23,7 +23,7 @@
     "expo-splash-screen": "~0.18.2",
     "expo-status-bar": "~1.4.4",
     "react": "18.2.0",
-    "react-hook-form": "^7.46.0",
+    "react-hook-form": "^7.46.2",
     "react-native": "0.71.8",
     "react-native-base64": "^0.2.1",
     "react-native-ble-plx": "^2.0.3",

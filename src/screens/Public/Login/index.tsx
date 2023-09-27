@@ -6,17 +6,20 @@ import {
   ButtonHeader,
   Container,
   Content,
+  ContentSubmitButton,
   Footer,
   Header,
   Image,
   Input,
   Text,
   TextButtonHeader,
+  TextError,
   Title,
 } from "./styles";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCallback } from "react";
+import { Alert } from "react-native";
 
 interface LoginProps {
   navigation: any;
@@ -39,13 +42,30 @@ const loginSchema = yup.object().shape({
 export function Login({ navigation }: LoginProps) {
   const { signIn } = useAuth();
 
-  const { control, handleSubmit } = useForm({
-    mode: "onChange",
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: "onBlur",
     resolver: yupResolver(loginSchema),
   });
 
-  const onSubmit: SubmitHandler<LoginSchema> = useCallback(async (data) => {},
-  []);
+  const onSubmit: SubmitHandler<LoginSchema> = useCallback(
+    async (data) => {
+      try {
+        await signIn({
+          email: data.email,
+          password: data.password,
+        });
+        navigation.navigate("Home");
+      } catch (err) {
+        console.log(err);
+        Alert.alert("Email/Senha inválidos");
+      }
+    },
+    [navigation]
+  );
 
   return (
     <Container>
@@ -60,23 +80,33 @@ export function Login({ navigation }: LoginProps) {
         <Controller
           control={control}
           name="email"
-          render={({ field }) => <Input placeholder="Email" {...field} />}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <Input
+              placeholder="Email"
+              onChangeText={onChange}
+              onBlur={onBlur}
+              value={value}
+            />
+          )}
         />
+        {errors.email && <TextError>{errors.email.message}</TextError>}
         <Controller
           control={control}
           name="password"
-          render={({ field }) => <Input placeholder="Senha" secureTextEntry={true}  {...field} />}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <Input
+              placeholder="Senha"
+              secureTextEntry={true}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              value={value}
+            />
+          )}
         />
-        <SecondaryButton
-          text="Entrar"
-          onPress={async () => {
-            await signIn({
-              email: "gabriel@gmail.com",
-              password: "XXXXXX",
-            });
-            navigation.navigate("Home");
-          }}
-        />
+        {errors.password && <TextError>{errors.password.message}</TextError>}
+        <ContentSubmitButton>
+          <SecondaryButton text="Entrar" onPress={handleSubmit(onSubmit)} />
+        </ContentSubmitButton>
       </Content>
       <Footer>
         <ButtonFooter

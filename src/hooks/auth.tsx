@@ -72,22 +72,21 @@ function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signIn = async ({ email, password }: SignInCredentials) => {
-    // Requisição de Login
+    try {
+      const response = await api.post("/users/session", { email, password });
 
-    api
-      .post("/users/session", { email, password })
-      .then(async (response) => {
-        const { token, user } = response.data;
+      const { token, user } = response.data;
 
-        await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
-        api.defaults.headers.authorization = `Bearer ${token}`;
-        setData({ user, device: null });
-        
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+      await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
+
+      api.defaults.headers.authorization = `Bearer ${token}`;
+      
+      setData({ user, device: null });
+
+      return response.data;
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const signOut = async () => {
