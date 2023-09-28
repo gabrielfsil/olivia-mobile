@@ -3,27 +3,31 @@ import useBLE from "../../../services/ble";
 import { Container, ContentService, List, TextService } from "./styles";
 import { useAuth } from "../../../hooks/auth";
 
-interface Service {
+
+interface Characteristc {
   id: number;
   uuid: string;
+  serviceUUID: string;
+  isNotifiable: boolean;
 }
 
-interface ListServicesProps {
+interface ListCharacteristicsProps {
   navigation: any;
   route: any;
 }
 
-export function ListServices({ navigation, route }: ListServicesProps) {
-  const { listServices, connectedDevice } = useBLE();
+export function ListCharacteristics({ navigation, route }: ListCharacteristicsProps) {
+  const { service } = route.params;
+
+  const { listCharacteristics } = useBLE();
   const { device } = useAuth();
-  const [services, setServices] = useState<Service[]>([]);
+  const [characteristics, setCharacteristics] = useState<Characteristc[]>([]);
 
   useEffect(() => {
-    console.log("Listando serviços");
-    console.log(device);
+    console.log("Listando caracteristicas");
     if (device) {
-      listServices(device).then((response) => {
-        setServices(response);
+      listCharacteristics(device, service).then((response) => {
+        setCharacteristics(response);
         console.log(response);
       });
     }
@@ -34,18 +38,12 @@ export function ListServices({ navigation, route }: ListServicesProps) {
       <List
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }: { item: any }) => (
-          <ContentService
-            onPress={async () => {
-              navigation.navigate("ListCharacteristics", {
-                service: item.uuid,
-              });
-            }}
-          >
+          <ContentService onPress={async () => {}}>
             <TextService>{item && item.id}</TextService>
             <TextService>{item && item.uuid}</TextService>
           </ContentService>
         )}
-        data={services}
+        data={characteristics}
       />
     </Container>
   );

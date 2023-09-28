@@ -6,6 +6,7 @@ import { Login } from "../screens/Public/Login";
 import { Register } from "../screens/Public/Register";
 import { useAuth } from "../hooks/auth";
 import { ListServices } from "../screens/Private/ListServices";
+import { ListCharacteristics } from "../screens/Private/ListCharacteristcs";
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +47,13 @@ export function Routes() {
             component={ListServices}
             options={{
               title: "Serviços",
+            }}
+          />
+          <Stack.Screen
+            name="ListCharacteristics"
+            component={ListCharacteristics}
+            options={{
+              title: "Características",
             }}
           />
         </Stack.Group>

@@ -1,5 +1,7 @@
+import { useCallback, useEffect } from "react";
 import { BoxConnect } from "../../../components/BoxConnect";
 import { PrimaryButton } from "../../../components/PrimaryButton";
+import { SecondaryButton } from "../../../components/SecondaryButton";
 import { useAuth } from "../../../hooks/auth";
 import useBLE from "../../../services/ble";
 import { Container, Content, ExitButton, Header, Text } from "./styles";
@@ -11,7 +13,21 @@ interface HomeProps {
 
 export function Home({ navigation, route }: HomeProps) {
   const { user, device, updateDevice, signOut } = useAuth();
-  const { disconnectFromDevice } = useBLE();
+  const { disconnectFromDevice, connectToDevice } = useBLE();
+
+  useEffect(() => {
+    reaconnectToDevice();
+  }, []);
+
+  const reaconnectToDevice = useCallback(async () => {
+    if (device) {
+      let connected = await device.isConnected();
+
+      if (!connected) {
+        await connectToDevice(device);
+      }
+    }
+  }, []);
 
   return (
     <Container>
@@ -27,6 +43,12 @@ export function Home({ navigation, route }: HomeProps) {
       </Header>
       <Content>
         <BoxConnect />
+        <SecondaryButton
+          onPress={() => {
+            navigation.navigate("ListServices");
+          }}
+          text="Listar Serviços"
+        />
         <PrimaryButton
           onPress={() => {
             if (device && device.id) {

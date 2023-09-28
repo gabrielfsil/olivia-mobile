@@ -12,6 +12,8 @@ import {
 import * as ExpoDevice from "expo-device";
 
 import base64 from "react-native-base64";
+import { useRealm } from "../../hooks/realm";
+import { useAuth } from "../../hooks/auth";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -21,17 +23,30 @@ interface BluetoothLowEnergyApi {
   scanForPeripherals(): Promise<boolean>;
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
-  startStreamingData: (device: Device) => Promise<any>;
+  startStreamingData: (device: Device) => any;
   listServices: (device: Device) => Promise<any>;
+  listCharacteristics: (device: Device,service: string) => Promise<any>;
   connectedDevice: Device | null;
   allDevices: Device[];
 }
 
+function maxBackoffJitter(attempt: number) {
+  const BASE = 2000;
+  const MAX_DELAY = 10000;
+  const exponential = Math.pow(2, attempt) * BASE;
+  const delay = Math.min(exponential, MAX_DELAY);
+  return Math.floor(Math.random() * delay);
+}
+
 function useBLE(): BluetoothLowEnergyApi {
+  const realm = useRealm();
+  const { user, device } = useAuth();
+
   const bleManager = useMemo(() => new BleManager(), []);
+
   const [allDevices, setAllDevices] = useState<Device[]>([]);
+
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -130,64 +145,162 @@ function useBLE(): BluetoothLowEnergyApi {
     return true;
   };
 
-  const connectToDevice = async (device: Device) => {
-    try {
-      if (!connectedDevice) {
-        
-        bleManager
-          .connectToDevice(device.id, {
+  const connectToDeviceWithRetry = (max_attempt: number = 5) => {
+    let attempt = 0;
+
+    return async function createConnection(device: Device) {
+      try {
+        if (!connectedDevice) {
+          console.log("Connecting to device");
+          const deviceConnected = await bleManager.connectToDevice(device.id, {
             autoConnect: true,
-          })
-          .then((device) => {
-            console.log("CONNECTED");
-            bleManager.stopDeviceScan();
-            setConnectedDevice(device);
-            return;
-          })
-          .catch((e) => {
-            console.log("FAILED TO CONNECT", e);
           });
+
+          await device.discoverAllServicesAndCharacteristics();
+
+          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
+
+          bleManager.stopDeviceScan();
+
+          setConnectedDevice(deviceConnected);
+
+          console.log("Connected to device");
+
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          startStreamingData(deviceConnected);
+        }
+      } catch (e) {
+        if (attempt < max_attempt) {
+          attempt += 1;
+          const delay = maxBackoffJitter(attempt);
+          console.warn(
+            `Request failed to connect. Retry attempt ${attempt} after ${delay}ms`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return createConnection(device);
+        }
       }
-    } catch (e) {
-      console.log("FAILED TO CONNECT", e);
-      await connectToDevice(device);
-    }
+    };
   };
 
-  const listServices = async (device: Device) => {
-    bleManager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.log(error);
+  const connectToDevice = async (device: Device) => {
+    const createConnection = connectToDeviceWithRetry(8);
+
+    await createConnection(device);
+  };
+
+  const listServicesWithRetry = (max_attempt: number = 5) => {
+    let attempt = 0;
+
+    return async function getServices(device: Device) {
+      try {
+        const connected = await device.isConnected();
+
+        console.log("CONNECTED: ", connected);
+
+        if (connected) {
+          bleManager.startDeviceScan(null, null, (error, device) => {
+            if (error) {
+              console.log(error);
+            }
+          });
+
+          await device.discoverAllServicesAndCharacteristics();
+
+          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
+
+          const services = await device.services();
+
+          bleManager.stopDeviceScan();
+
+          return services;
+        } else {
+          await connectToDevice(device);
+
+          throw new Error();
+        }
+      } catch (e) {
+        if (attempt < max_attempt) {
+          attempt += 1;
+          const delay = maxBackoffJitter(attempt);
+          console.warn(
+            `Request failed to list services. Retry attempt ${attempt} after ${delay}ms`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return getServices(device);
+        }
       }
-    });
-    setTimeout(() => {
-      device.discoverAllServicesAndCharacteristics().then(async (device) => {
-        console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
-        bleManager.stopDeviceScan();
-        const services = await device.services();
-        console.log("SERVICES", services);
-        return services;
-      });
-    }, 3000);
+    };
+  };
+
+  const listServices = async (device: Device): Promise<any> => {
+    const getServices = listServicesWithRetry(5);
+
+    const services = await getServices(device);
+
+    return services;
+  };
+
+  const listCharacteristcsWithRetry = (max_attempt: number = 5) => {
+    let attempt = 0;
+
+    return async function getCharacteristcs(device: Device,service:string) {
+      try {
+        const connected = await device.isConnected();
+
+        console.log("CONNECTED: ", connected);
+
+        if (connected) {
+          bleManager.startDeviceScan(null, null, (error, device) => {
+            if (error) {
+              console.log(error);
+            }
+          });
+
+          await device.discoverAllServicesAndCharacteristics();
+
+          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
+
+          const characteristics = await device.characteristicsForService(service);
+
+          bleManager.stopDeviceScan();
+
+          return characteristics;
+        } else {
+          await connectToDevice(device);
+
+          throw new Error();
+        }
+      } catch (e) {
+        if (attempt < max_attempt) {
+          attempt += 1;
+          const delay = maxBackoffJitter(attempt);
+          console.warn(
+            `Request failed to list services. Retry attempt ${attempt} after ${delay}ms`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return getCharacteristcs(device,service);
+        }
+      }
+    };
+  };
+
+  const listCharacteristics = async (device: Device, service: string): Promise<any> => {
+    const getServices = listCharacteristcsWithRetry(5);
+
+    const services = await getServices(device,service);
+
+    return services;
   };
 
   const disconnectFromDevice = () => {
     if (connectedDevice) {
-      subscription?.remove();
       connectedDevice.cancelConnection().then(() => {
         setConnectedDevice(null);
         console.log("DISCONNECTED");
       });
     }
-  };
-
-  const checkConnectionStatus = async () => {
-    if (connectedDevice) {
-      const isConnected = await connectedDevice.isConnected();
-      console.log("isConnected: ", isConnected);
-      return isConnected ? connectedDevice : null;
-    }
-    return null;
   };
 
   const onHeartRateUpdate = (
@@ -202,17 +315,11 @@ function useBLE(): BluetoothLowEnergyApi {
         [
           {
             text: "OK",
-            onPress: () => {
-              checkConnectionStatus().then((device) => {
-                if (device) {
-                  console.log("Connection is still alive");
-                  subscription?.remove();
-                  startStreamingData(device);
-                } else {
-                  console.log("Connection is dead");
-                  disconnectFromDevice();
-                }
-              });
+            onPress: async () => {
+              console.log(connectedDevice);
+              if (connectedDevice) {
+                await connectToDevice(connectedDevice);
+              }
             },
           },
         ]
@@ -243,70 +350,58 @@ function useBLE(): BluetoothLowEnergyApi {
 
     console.log("Heart Rate: ", innerHeartRate);
     console.log("Timestamp: ", new Date());
+
+    realm.write(() => {
+      realm.create("HeartRate", {
+        user_id: user?._id,
+        heart_rate: innerHeartRate,
+        created_at: new Date(),
+      });
+    });
   };
 
-  const startStreamingData = async (device: Device) => {
-    if (device) {
-      const isConnected = await device.isConnected();
-      if (isConnected) {
-        const subs = device.monitorCharacteristicForService(
-          HEART_RATE_UUID,
-          HEART_RATE_CHARACTERISTIC,
-          onHeartRateUpdate
-        );
+  const heartRateMonitorWithRetry = (
+    max_attempt: number = 5,
+    device: Device
+  ) => {
+    let attempt = 0;
 
-        device.onDisconnected((error, device) => {
-          if (error) {
-            console.log("Error: ", error);
-          }
-
-          console.log("Disconnected from device");
-          subs.remove();
-          setConnectedDevice(null);
-          checkConnectionStatus()
-            .then((isConnected) => {
-              if (!isConnected) {
-                connectToDevice(device)
-                  .then(() => {
-                    console.log("Connection recreated");
-                  })
-                  .catch((err) => {
-                    console.log("Failed to recreate connection");
-                    console.log(err);
-                  });
-              }
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        });
-        if (subscription) {
-          subscription.remove();
+    return async function monitorHeartRate(
+      error: BleError | null,
+      characteristic: Characteristic | null
+    ) {
+      if (error) {
+        if (attempt < max_attempt) {
+          attempt += 1;
+          const delay = maxBackoffJitter(attempt);
+          console.warn(
+            `Request failed to monitor heart rate. Retry attempt ${attempt} after ${delay}ms`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          startStreamingData(device);
         }
-        setSubscription(subs);
-        return subs;
-      } else {
-        scanForPeripherals()
-          .then((status) => {
-            if (status) {
-              connectToDevice(device)
-                .then(() => {
-                  console.log("Connection recreated");
-                })
-                .catch((err) => {
-                  console.log("Failed to recreate connection");
-                  console.log(err);
-                });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+      } else if (characteristic) {
+        onHeartRateUpdate(error, characteristic);
       }
-    } else {
-      console.log("No Device Connected");
-      setConnectedDevice(null);
-    }
+    };
+  };
+
+  const startStreamingData = (device: Device): Subscription => {
+    const subscription = device.monitorCharacteristicForService(
+      HEART_RATE_UUID,
+      HEART_RATE_CHARACTERISTIC,
+      onHeartRateUpdate
+    );
+
+    device.onDisconnected((error, device) => {
+      if (error) {
+        console.log("Error: ", error);
+      }
+
+      console.log("Disconnected from device");
+    });
+
+    return subscription;
   };
 
   return {
@@ -318,6 +413,7 @@ function useBLE(): BluetoothLowEnergyApi {
     connectedDevice,
     disconnectFromDevice,
     startStreamingData,
+    listCharacteristics
   };
 }
 

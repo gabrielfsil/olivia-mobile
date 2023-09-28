@@ -8,7 +8,7 @@ interface AuthProviderProps {
 }
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   permission: number;
@@ -88,6 +88,8 @@ function AuthProvider({ children }: AuthProviderProps) {
 
     await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
 
+    console.log(user);
+    
     setData({
       user: {
         ...user,

@@ -50,7 +50,7 @@ export function ListDevices({ navigation }: ListDevicesProps) {
               setLoading(true);
               await connectToDevice(item);
               setLoading(false);
-              navigation.navigate("ListServices");
+              navigation.navigate("Home");
             }}
           >
             <NameDevice>{item && item.name}</NameDevice>
