@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import useBLE from "../../../services/ble";
-import { Container, ContentDevice, List, NameDevice } from "./styles";
+import { Container, ContentDevice, List, NameDevice, TextLoading } from "./styles";
 import { useAuth } from "../../../hooks/auth";
 
 interface ListDevicesProps {
@@ -13,12 +13,9 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     requestPermissions,
     scanForPeripherals,
     connectToDevice,
-    connectedDevice,
   } = useBLE();
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const { updateDevice } = useAuth();
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const scanForDevices = async () => {
@@ -34,14 +31,10 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     scanForDevices();
   }, []);
 
-  useEffect(() => {
-    if (connectedDevice) {
-      updateDevice(connectedDevice);
-    }
-  }, [connectedDevice]);
-
   return (
     <Container>
+      {loading && <TextLoading>Procurando dispositivos...</TextLoading>}
+     
       <List
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }: { item: any }) => (

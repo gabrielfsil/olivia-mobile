@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import useBLE from "../../../services/ble";
 import { Container, ContentService, List, TextService } from "./styles";
 import { useAuth } from "../../../hooks/auth";
+import { useBluetooth } from "../../../hooks/bluetooth";
 
 interface Service {
   id: number;
@@ -13,14 +14,17 @@ interface ListServicesProps {
   route: any;
 }
 
+const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
+
 export function ListServices({ navigation, route }: ListServicesProps) {
-  const { listServices, connectedDevice } = useBLE();
-  const { device } = useAuth();
+  const { listServices } = useBLE();
+  const {
+    state: { device },
+  } = useBluetooth();
   const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
     console.log("Listando serviços");
-    console.log(device);
     if (device) {
       listServices(device).then((response) => {
         setServices(response);
@@ -42,7 +46,9 @@ export function ListServices({ navigation, route }: ListServicesProps) {
             }}
           >
             <TextService>{item && item.id}</TextService>
-            <TextService>{item && item.uuid}</TextService>
+            {item.uuid === HEART_RATE_UUID && (
+              <TextService>Serviço de Frequência Cardíaca</TextService>
+            )}
           </ContentService>
         )}
         data={services}

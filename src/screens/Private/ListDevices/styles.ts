@@ -19,3 +19,8 @@ export const NameDevice = styled.Text`
     font-size: 16px;
     font-weight: bold;
 `;
+
+export const TextLoading = styled.Text`
+  margin-left: 16px;
+  margin-bottom: 16px;
+`

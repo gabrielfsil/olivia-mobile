@@ -1,5 +1,5 @@
 import Realm from "realm";
-Realm.flags.THROW_ON_GLOBAL_REALM = true
+Realm.flags.THROW_ON_GLOBAL_REALM = true;
 import { ThemeProvider } from "styled-components/native";
 import light from "./src/theme/light";
 import { Routes } from "./src/Routes";
@@ -10,6 +10,7 @@ import { AppProvider, UserProvider } from "@realm/react";
 import { APP_ID } from "@env";
 import { NavigationContainer } from "@react-navigation/native";
 import { Authenticator } from "./src/screens/Public/Authenticator";
+import { BluetoothProvider } from "./src/hooks/bluetooth";
 
 export default function App() {
   return (
@@ -17,13 +18,15 @@ export default function App() {
       <ThemeProvider theme={light}>
         <StatusBar backgroundColor={"#855EE0"} />
         <AuthProvider>
-          <NavigationContainer>
-            <UserProvider fallback={Authenticator}>
-              <RealmProvider>
-                <Routes />
-              </RealmProvider>
-            </UserProvider>
-          </NavigationContainer>
+          <BluetoothProvider>
+            <NavigationContainer>
+              <UserProvider fallback={Authenticator}>
+                <RealmProvider>
+                  <Routes />
+                </RealmProvider>
+              </UserProvider>
+            </NavigationContainer>
+          </BluetoothProvider>
         </AuthProvider>
       </ThemeProvider>
     </AppProvider>

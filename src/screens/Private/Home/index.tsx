@@ -6,13 +6,17 @@ import { useAuth } from "../../../hooks/auth";
 import useBLE from "../../../services/ble";
 import { Container, Content, ExitButton, Header, Text } from "./styles";
 import { Ionicons } from "@expo/vector-icons";
+import { useBluetooth } from "../../../hooks/bluetooth";
 interface HomeProps {
   navigation: any;
   route: any;
 }
 
 export function Home({ navigation, route }: HomeProps) {
-  const { user, device, updateDevice, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const {
+    state: { device, isConnected },
+  } = useBluetooth();
   const { disconnectFromDevice, connectToDevice } = useBLE();
 
   useEffect(() => {
@@ -20,12 +24,8 @@ export function Home({ navigation, route }: HomeProps) {
   }, []);
 
   const reaconnectToDevice = useCallback(async () => {
-    if (device) {
-      let connected = await device.isConnected();
-
-      if (!connected) {
-        await connectToDevice(device);
-      }
+    if (isConnected && device) {
+      await connectToDevice(device);
     }
   }, []);
 
@@ -51,14 +51,21 @@ export function Home({ navigation, route }: HomeProps) {
         />
         <PrimaryButton
           onPress={() => {
-            if (device && device.id) {
+            if (isConnected) {
               disconnectFromDevice();
-              updateDevice(null);
             } else {
               navigation.navigate("ListDevices");
             }
           }}
-          text={device ? "Desconectar" : "Conectar"}
+          text={isConnected ? "Desconectar" : "Conectar"}
+        />
+        <SecondaryButton
+          onPress={async () => {
+            if (!isConnected && device) {
+              await connectToDevice(device);
+            }
+          }}
+          text="Reconetar"
         />
       </Content>
     </Container>

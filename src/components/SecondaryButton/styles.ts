@@ -5,6 +5,7 @@ export const ButtonStyled = styled.TouchableOpacity`
   background: ${({ theme }) => theme.COLORS.SECONDARY};
   border-radius: 8px;
   padding: 8px;
+  margin-top: 8px;
 `;
 
 export const TextButtonStyled = styled.Text`

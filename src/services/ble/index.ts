@@ -14,6 +14,7 @@ import * as ExpoDevice from "expo-device";
 import base64 from "react-native-base64";
 import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
+import { useBluetooth } from "../../hooks/bluetooth";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -25,8 +26,7 @@ interface BluetoothLowEnergyApi {
   disconnectFromDevice: () => void;
   startStreamingData: (device: Device) => any;
   listServices: (device: Device) => Promise<any>;
-  listCharacteristics: (device: Device,service: string) => Promise<any>;
-  connectedDevice: Device | null;
+  listCharacteristics: (device: Device, service: string) => Promise<any>;
   allDevices: Device[];
 }
 
@@ -40,13 +40,15 @@ function maxBackoffJitter(attempt: number) {
 
 function useBLE(): BluetoothLowEnergyApi {
   const realm = useRealm();
-  const { user, device } = useAuth();
+  const { user } = useAuth();
+  const {
+    dispatch,
+    state: { device: connectedDevice, isConnected },
+  } = useBluetooth();
 
   const bleManager = useMemo(() => new BleManager(), []);
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
-
-  const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -145,12 +147,24 @@ function useBLE(): BluetoothLowEnergyApi {
     return true;
   };
 
+  const checkConnectionInterval = async (device: Device) => {
+    const isConnected = await device.isConnected();
+    if (!isConnected) {
+    }
+  };
+
   const connectToDeviceWithRetry = (max_attempt: number = 5) => {
     let attempt = 0;
 
     return async function createConnection(device: Device) {
       try {
         if (!connectedDevice) {
+          bleManager.startDeviceScan(null, null, (error, device) => {
+            if (error) {
+              console.log(error);
+            }
+          });
+
           console.log("Connecting to device");
           const deviceConnected = await bleManager.connectToDevice(device.id, {
             autoConnect: true,
@@ -162,15 +176,23 @@ function useBLE(): BluetoothLowEnergyApi {
 
           bleManager.stopDeviceScan();
 
-          setConnectedDevice(deviceConnected);
+          dispatch({
+            type: "SET_DEVICE",
+            payload: deviceConnected,
+          });
+          dispatch({
+            type: "SET_CONNECTED",
+            payload: true,
+          });
 
           console.log("Connected to device");
 
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+          // await new Promise((resolve) => setTimeout(resolve, 3000));
 
-          startStreamingData(deviceConnected);
+          // startStreamingData(deviceConnected);
         }
       } catch (e) {
+        bleManager.stopDeviceScan();
         if (attempt < max_attempt) {
           attempt += 1;
           const delay = maxBackoffJitter(attempt);
@@ -216,6 +238,11 @@ function useBLE(): BluetoothLowEnergyApi {
 
           return services;
         } else {
+          dispatch({
+            type: "SET_CONNECTED",
+            payload: false,
+          });
+
           await connectToDevice(device);
 
           throw new Error();
@@ -245,7 +272,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const listCharacteristcsWithRetry = (max_attempt: number = 5) => {
     let attempt = 0;
 
-    return async function getCharacteristcs(device: Device,service:string) {
+    return async function getCharacteristcs(device: Device, service: string) {
       try {
         const connected = await device.isConnected();
 
@@ -262,7 +289,9 @@ function useBLE(): BluetoothLowEnergyApi {
 
           console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
 
-          const characteristics = await device.characteristicsForService(service);
+          const characteristics = await device.characteristicsForService(
+            service
+          );
 
           bleManager.stopDeviceScan();
 
@@ -280,16 +309,19 @@ function useBLE(): BluetoothLowEnergyApi {
             `Request failed to list services. Retry attempt ${attempt} after ${delay}ms`
           );
           await new Promise((resolve) => setTimeout(resolve, delay));
-          return getCharacteristcs(device,service);
+          return getCharacteristcs(device, service);
         }
       }
     };
   };
 
-  const listCharacteristics = async (device: Device, service: string): Promise<any> => {
+  const listCharacteristics = async (
+    device: Device,
+    service: string
+  ): Promise<any> => {
     const getServices = listCharacteristcsWithRetry(5);
 
-    const services = await getServices(device,service);
+    const services = await getServices(device, service);
 
     return services;
   };
@@ -297,7 +329,10 @@ function useBLE(): BluetoothLowEnergyApi {
   const disconnectFromDevice = () => {
     if (connectedDevice) {
       connectedDevice.cancelConnection().then(() => {
-        setConnectedDevice(null);
+        dispatch({
+          type: "SET_CONNECTED",
+          payload: false,
+        });
         console.log("DISCONNECTED");
       });
     }
@@ -309,18 +344,14 @@ function useBLE(): BluetoothLowEnergyApi {
   ) => {
     if (error) {
       console.log(error);
+
       Alert.alert(
         "Erro ao ler o BPM",
         "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
         [
           {
-            text: "OK",
-            onPress: async () => {
-              console.log(connectedDevice);
-              if (connectedDevice) {
-                await connectToDevice(connectedDevice);
-              }
-            },
+            text: "Ok",
+            onPress: () => {},
           },
         ]
       );
@@ -360,48 +391,37 @@ function useBLE(): BluetoothLowEnergyApi {
     });
   };
 
-  const heartRateMonitorWithRetry = (
-    max_attempt: number = 5,
-    device: Device
-  ) => {
-    let attempt = 0;
+  const startStreamingData = (device: Device) => {
+    if (device) {
+      const subscription = device.monitorCharacteristicForService(
+        HEART_RATE_UUID,
+        HEART_RATE_CHARACTERISTIC,
+        onHeartRateUpdate
+      );
 
-    return async function monitorHeartRate(
-      error: BleError | null,
-      characteristic: Characteristic | null
-    ) {
-      if (error) {
-        if (attempt < max_attempt) {
-          attempt += 1;
-          const delay = maxBackoffJitter(attempt);
-          console.warn(
-            `Request failed to monitor heart rate. Retry attempt ${attempt} after ${delay}ms`
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          startStreamingData(device);
+      dispatch({
+        type: "SET_SUBSCRIPTION",
+        payload: subscription,
+      });
+
+      console.log("Started monitoring heart rate");
+
+      device.onDisconnected((error, device) => {
+        if (error) {
+          console.log("Error: ", error);
         }
-      } else if (characteristic) {
-        onHeartRateUpdate(error, characteristic);
-      }
-    };
-  };
+        dispatch({
+          type: "SET_CONNECTED",
+          payload: false,
+        });
 
-  const startStreamingData = (device: Device): Subscription => {
-    const subscription = device.monitorCharacteristicForService(
-      HEART_RATE_UUID,
-      HEART_RATE_CHARACTERISTIC,
-      onHeartRateUpdate
-    );
+        console.log("Disconnected from device");
+      });
 
-    device.onDisconnected((error, device) => {
-      if (error) {
-        console.log("Error: ", error);
-      }
+      return subscription;
+    }
 
-      console.log("Disconnected from device");
-    });
-
-    return subscription;
+    return null;
   };
 
   return {
@@ -410,10 +430,9 @@ function useBLE(): BluetoothLowEnergyApi {
     requestPermissions,
     connectToDevice,
     allDevices,
-    connectedDevice,
     disconnectFromDevice,
     startStreamingData,
-    listCharacteristics
+    listCharacteristics,
   };
 }
 

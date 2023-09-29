@@ -6,12 +6,14 @@ import {
   ContentText,
 } from "./styles";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../hooks/auth";
+import { useBluetooth } from "../../hooks/bluetooth";
 
 interface BoxConnect {}
 
 export function BoxConnect({}: BoxConnect) {
-  const { device } = useAuth();
+  const {
+    state: { device, isConnected },
+  } = useBluetooth();
 
   return (
     <BoxStyled>
@@ -24,7 +26,7 @@ export function BoxConnect({}: BoxConnect) {
             ? device.name && device.name.toUpperCase()
             : "Nenhum dispositivo"}
         </Title>
-        <TextStatus>{device ? "CONECTADO" : "-"}</TextStatus>
+        <TextStatus>{isConnected ? "CONECTADO" : "DESCONECTADO"}</TextStatus>
       </ContentText>
     </BoxStyled>
   );
