@@ -9,26 +9,37 @@ import { RealmProvider } from "./src/hooks/realm";
 import { AppProvider, UserProvider } from "@realm/react";
 import { APP_ID } from "@env";
 import { NavigationContainer } from "@react-navigation/native";
-import { Authenticator } from "./src/screens/Public/Authenticator";
 import { BluetoothProvider } from "./src/hooks/bluetooth";
 import { HeartBeat } from "./src/databases/schemas/HeartBeat";
 import { Position } from "./src/databases/schemas/Position";
+import { Login } from "./src/screens/Public/Login";
+import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
 
 export default function App() {
   return (
-    <AppProvider id={APP_ID}>
+    <AppProvider id={APP_ID} baseUrl="https://realm.mongodb.com">
       <ThemeProvider theme={light}>
         <StatusBar backgroundColor={"#855EE0"} />
         <AuthProvider>
           <BluetoothProvider>
             <NavigationContainer>
-              <UserProvider fallback={Authenticator}>
+              <UserProvider fallback={Login}>
                 <RealmProvider
                   sync={{
                     flexible: true,
-                    onError: console.error,
+                    onError: (_, error) => {
+                      // Show sync errors in the console
+                      console.error(error);
+                    },
+                    initialSubscriptions: {
+                      update(subs, realm) {
+                        subs.add(realm.objects(HeartBeat));
+                        subs.add(realm.objects(Position));
+                      },
+                    },
                   }}
                   schema={[HeartBeat, Position]}
+                  fallback={LoadingIndicator}
                 >
                   <Routes />
                 </RealmProvider>

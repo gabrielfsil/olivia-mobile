@@ -1,5 +1,5 @@
 import { GeoPosition } from "realm";
-
+import Realm from 'realm'
 
 class Position extends Realm.Object<Position> {
   _id!: Realm.BSON.ObjectId;

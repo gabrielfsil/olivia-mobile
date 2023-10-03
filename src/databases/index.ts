@@ -6,6 +6,6 @@ import { Position } from "./schemas/Position";
 
 export const realmConfig: Realm.Configuration = {
   path: "olivia-app",
-  schema: [HeartBeat, User, Position],
-  schemaVersion: 4,
+  schema: [HeartBeat, Position],
+  schemaVersion: 5,
 };

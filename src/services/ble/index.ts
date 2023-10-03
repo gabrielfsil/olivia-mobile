@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PermissionsAndroid, Platform, Alert } from "react-native";
 import {
   BleError,
@@ -7,8 +7,8 @@ import {
   Characteristic,
   Device,
   NativeDevice,
-  Subscription,
 } from "react-native-ble-plx";
+import Realm from "realm";
 
 import * as ExpoDevice from "expo-device";
 
@@ -16,7 +16,6 @@ import base64 from "react-native-base64";
 import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
 import { useBluetooth } from "../../hooks/bluetooth";
-import { writeHeartBeat } from "../../databases/repository/HeartBeatRepository";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -41,15 +40,39 @@ function maxBackoffJitter(attempt: number) {
   return Math.floor(Math.random() * delay);
 }
 
+interface HeartRate {
+  value: number;
+  timestamp: Date;
+}
+
 function useBLE(): BluetoothLowEnergyApi {
   const { user } = useAuth();
   const { dispatch } = useBluetooth();
+
+  const [heartRate, setHeartRate] = useState<HeartRate>({
+    value: -1,
+    timestamp: new Date(),
+  });
 
   const realm = useRealm();
 
   const bleManager = useMemo(() => new BleManager(), []);
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
+
+  useEffect(() => {
+    console.log(heartRate);
+    if (heartRate.value > 0) {
+      realm.write(() => {
+        realm.create("HeartBeats", {
+          _id: new Realm.BSON.ObjectId(),
+          user_id: user?._id,
+          heart_rate: heartRate.value,
+          created_at: heartRate.timestamp,
+        });
+      });
+    }
+  }, [heartRate, realm, user]);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -100,7 +123,7 @@ function useBLE(): BluetoothLowEnergyApi {
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: "Location Permission",
-            message: "Bluetooth Low Energy requires Location",
+            message: "Bluetooth Low Energy(BLE) precisa da localização",
             buttonPositive: "OK",
           }
         );
@@ -400,12 +423,9 @@ function useBLE(): BluetoothLowEnergyApi {
         Number(rawData[2].charCodeAt(2));
     }
 
-    console.log("Heart Rate: ", innerHeartRate);
-    console.log("Timestamp: ", new Date());
-
-    writeHeartBeat({
-      heart_rate: innerHeartRate,
-      created_at: new Date(),
+    setHeartRate({
+      timestamp: new Date(),
+      value: innerHeartRate,
     });
   };
 

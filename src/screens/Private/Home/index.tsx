@@ -18,6 +18,7 @@ import { useBluetooth } from "../../../hooks/bluetooth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Device } from "react-native-ble-plx";
 import { ActivityIndicator, Modal } from "react-native";
+import { useRealm } from "../../../hooks/realm";
 interface HomeProps {
   navigation: any;
   route: any;
@@ -30,6 +31,7 @@ export function Home({ navigation, route }: HomeProps) {
     dispatch,
   } = useBluetooth();
   const { createDevice } = useBLE();
+
   const { disconnectFromDevice, connectToDevice, requestPermissions } =
     useBLE();
   const [loading, setLoading] = useState(false);
@@ -78,7 +80,7 @@ export function Home({ navigation, route }: HomeProps) {
         </ContentLoading>
       </Modal>
       <Header>
-        <Text>Olá, {user ? user.name : "Visitante"}</Text>
+        <Text>Olá</Text>
         <ExitButton
           onPress={() => {
             signOut();

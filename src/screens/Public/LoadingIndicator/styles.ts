@@ -2,8 +2,9 @@ import styled from "styled-components/native";
 
 export const Container = styled.View`
   flex: 1;
-  background: ${({ theme }) => theme.COLORS.PRIMARY};
-  padding: 24px 16px;
+  background: #fff;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const Title = styled.Text`
@@ -15,7 +16,7 @@ export const Title = styled.Text`
 
 export const Text = styled.Text`
   font-size: 16px;
-  color: ${({ theme }) => theme.COLORS.TEXT_PRIMARY};
+  color: ${({ theme }) => theme.COLORS.PRIMARY};
   text-align: justify;
   line-height: 24px;
 `;
