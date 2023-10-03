@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import useBLE from "../../../services/ble";
-import { Container, ContentDevice, List, NameDevice, TextLoading } from "./styles";
-import { useAuth } from "../../../hooks/auth";
+import {
+  Container,
+  ContentDevice,
+  ContentLoading,
+  List,
+  NameDevice,
+  TextLoading,
+} from "./styles";
+import { ActivityIndicator, Modal } from "react-native";
 
 interface ListDevicesProps {
   navigation: any;
@@ -15,7 +22,7 @@ export function ListDevices({ navigation }: ListDevicesProps) {
     connectToDevice,
   } = useBLE();
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const scanForDevices = async () => {
@@ -34,7 +41,17 @@ export function ListDevices({ navigation }: ListDevicesProps) {
   return (
     <Container>
       {loading && <TextLoading>Procurando dispositivos...</TextLoading>}
-     
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={loading}
+        onRequestClose={() => {}}
+      >
+        <ContentLoading>
+          <ActivityIndicator size={"large"} color={"#855EE0"} />
+          <TextLoading>Conectando o dispositivo...</TextLoading>
+        </ContentLoading>
+      </Modal>
       <List
         keyExtractor={(item: any) => item.id}
         renderItem={({ item }: { item: any }) => (

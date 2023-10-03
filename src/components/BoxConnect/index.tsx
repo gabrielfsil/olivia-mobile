@@ -8,15 +8,21 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useBluetooth } from "../../hooks/bluetooth";
 
-interface BoxConnect {}
+interface BoxConnectProps {
+  navigation: any;
+}
 
-export function BoxConnect({}: BoxConnect) {
+export function BoxConnect({ navigation }: BoxConnectProps) {
   const {
     state: { device, isConnected },
   } = useBluetooth();
 
   return (
-    <BoxStyled>
+    <BoxStyled
+      onPress={() => {
+        navigation.navigate("ListServices");
+      }}
+    >
       <IconSmartwatch>
         <Ionicons name="watch" size={56} color={"#FFFFFF"} />
       </IconSmartwatch>

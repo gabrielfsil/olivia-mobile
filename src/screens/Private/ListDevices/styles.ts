@@ -24,3 +24,10 @@ export const TextLoading = styled.Text`
   margin-left: 16px;
   margin-bottom: 16px;
 `
+
+export const ContentLoading = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+`

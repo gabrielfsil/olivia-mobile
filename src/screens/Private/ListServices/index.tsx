@@ -28,7 +28,6 @@ export function ListServices({ navigation, route }: ListServicesProps) {
     if (device) {
       listServices(device).then((response) => {
         setServices(response);
-        console.log(response);
       });
     }
   }, [device]);

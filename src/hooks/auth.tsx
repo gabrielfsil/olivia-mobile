@@ -52,12 +52,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const updateContext = async () => {
     try {
       const user = await AsyncStorage.getItem("@olivia:user");
-      const device = await AsyncStorage.getItem("@olivia:device");
-
-      if (user && device) {
-        setData({ user: JSON.parse(user), device: JSON.parse(device) });
-        return { user: JSON.parse(user), device: JSON.parse(device) };
-      }
+      
 
       if (user) {
         setData({ user: JSON.parse(user), device: null });
@@ -87,8 +82,6 @@ function AuthProvider({ children }: AuthProviderProps) {
     const { token, user } = response.data;
 
     await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
-
-    console.log(user);
     
     setData({
       user: {

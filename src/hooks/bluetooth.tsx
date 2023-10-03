@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useReducer, useContext } from "react";
 import { Device, Subscription } from "react-native-ble-plx";
 
@@ -27,11 +28,20 @@ const BluetoothProvider = ({ children }: BluetoothProviderProps) => {
     subscription: null,
   } as BluetoothState;
 
+  const updateDeviceStorage = async (device: string) => {
+    try {
+      await AsyncStorage.setItem("@olivia:device", JSON.stringify(device));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const reducer: React.Reducer<BluetoothState, any> = (state, action) => {
     switch (action.type) {
       case "SET_CONNECTED":
         return { ...state, isConnected: action.payload };
       case "SET_DEVICE":
+        updateDeviceStorage(action.payload);
         return { ...state, device: action.payload };
       case "SET_SUBSCRIPTION":
         return { ...state, subscription: action.payload };

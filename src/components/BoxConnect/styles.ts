@@ -1,6 +1,6 @@
 import styled from "styled-components/native";
 
-export const BoxStyled = styled.View`
+export const BoxStyled = styled.TouchableOpacity`
   border-radius: 8px;
   padding: 8px;
   background: ${({ theme }) => theme.COLORS.BACKGROUND_SECONDARY};

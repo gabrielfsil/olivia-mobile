@@ -6,6 +6,7 @@ import {
   BleManager,
   Characteristic,
   Device,
+  NativeDevice,
   Subscription,
 } from "react-native-ble-plx";
 
@@ -23,11 +24,12 @@ interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
   scanForPeripherals(): Promise<boolean>;
   connectToDevice: (deviceId: Device) => Promise<void>;
-  disconnectFromDevice: () => void;
+  disconnectFromDevice: (device: Device) => Promise<void>;
   startStreamingData: (device: Device) => any;
   listServices: (device: Device) => Promise<any>;
   listCharacteristics: (device: Device, service: string) => Promise<any>;
   allDevices: Device[];
+  createDevice(device: NativeDevice): Device;
 }
 
 function maxBackoffJitter(attempt: number) {
@@ -103,7 +105,23 @@ function useBLE(): BluetoothLowEnergyApi {
             buttonPositive: "OK",
           }
         );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+
+        const fineLocationBackgourndPermission =
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+            {
+              title: "Background Location Permission",
+              message:
+                "A olivia precisa de acesso a localização em segundo plano",
+              buttonPositive: "OK",
+            }
+          );
+
+        return (
+          fineLocationBackgourndPermission ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted === PermissionsAndroid.RESULTS.GRANTED
+        );
       } else {
         const isAndroid31PermissionsGranted =
           await requestAndroid31Permissions();
@@ -111,7 +129,7 @@ function useBLE(): BluetoothLowEnergyApi {
         return isAndroid31PermissionsGranted;
       }
     } else {
-      return true;
+      return false;
     }
   };
 
@@ -147,18 +165,14 @@ function useBLE(): BluetoothLowEnergyApi {
     return true;
   };
 
-  const checkConnectionInterval = async (device: Device) => {
-    const isConnected = await device.isConnected();
-    if (!isConnected) {
-    }
-  };
-
   const connectToDeviceWithRetry = (max_attempt: number = 5) => {
     let attempt = 0;
 
     return async function createConnection(device: Device) {
       try {
-        if (!connectedDevice) {
+        const isConnected = await device.isConnected();
+
+        if (!isConnected) {
           bleManager.startDeviceScan(null, null, (error, device) => {
             if (error) {
               console.log(error);
@@ -170,7 +184,7 @@ function useBLE(): BluetoothLowEnergyApi {
             autoConnect: true,
           });
 
-          await device.discoverAllServicesAndCharacteristics();
+          await deviceConnected.discoverAllServicesAndCharacteristics();
 
           console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
 
@@ -180,6 +194,7 @@ function useBLE(): BluetoothLowEnergyApi {
             type: "SET_DEVICE",
             payload: deviceConnected,
           });
+
           dispatch({
             type: "SET_CONNECTED",
             payload: true,
@@ -187,9 +202,9 @@ function useBLE(): BluetoothLowEnergyApi {
 
           console.log("Connected to device");
 
-          // await new Promise((resolve) => setTimeout(resolve, 3000));
+          await new Promise((resolve) => setTimeout(resolve, 3000));
 
-          // startStreamingData(deviceConnected);
+          startStreamingData(deviceConnected);
         }
       } catch (e) {
         bleManager.stopDeviceScan();
@@ -326,14 +341,21 @@ function useBLE(): BluetoothLowEnergyApi {
     return services;
   };
 
-  const disconnectFromDevice = () => {
-    if (connectedDevice) {
-      connectedDevice.cancelConnection().then(() => {
+  const disconnectFromDevice = async (device: Device) => {
+    const isConnected = await device.isConnected();
+
+    if (isConnected) {
+      device.cancelConnection().then(() => {
         dispatch({
           type: "SET_CONNECTED",
           payload: false,
         });
         console.log("DISCONNECTED");
+      });
+    } else {
+      dispatch({
+        type: "SET_CONNECTED",
+        payload: false,
       });
     }
   };
@@ -424,7 +446,14 @@ function useBLE(): BluetoothLowEnergyApi {
     return null;
   };
 
+  const createDevice = (device: NativeDevice) => {
+    const newDevice = new Device(device, bleManager);
+
+    return newDevice;
+  };
+
   return {
+    createDevice,
     scanForPeripherals,
     listServices,
     requestPermissions,

@@ -8,8 +8,7 @@ export const Container = styled.View`
 
 export const Content = styled.View`
   flex: 1;
-  
-`
+`;
 
 export const Text = styled.Text`
   font-size: 24px;
@@ -21,8 +20,20 @@ export const Header = styled.View`
   margin: 16px;
   flex-direction: row;
   align-items: center;
-`
+`;
 
 export const ExitButton = styled.TouchableOpacity`
   align-items: center;
-`
+`;
+export const TextLoading = styled.Text`
+  margin-left: 16px;
+  margin-bottom: 16px;
+  font-size: 24px;
+`;
+
+export const ContentLoading = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+`;
