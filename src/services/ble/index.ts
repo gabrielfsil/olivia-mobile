@@ -16,6 +16,7 @@ import base64 from "react-native-base64";
 import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
 import { useBluetooth } from "../../hooks/bluetooth";
+import { writeHeartBeat } from "../../databases/repository/HeartBeatRepository";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -41,12 +42,10 @@ function maxBackoffJitter(attempt: number) {
 }
 
 function useBLE(): BluetoothLowEnergyApi {
-  const realm = useRealm();
   const { user } = useAuth();
-  const {
-    dispatch,
-    state: { device: connectedDevice, isConnected },
-  } = useBluetooth();
+  const { dispatch } = useBluetooth();
+
+  const realm = useRealm();
 
   const bleManager = useMemo(() => new BleManager(), []);
 
@@ -369,7 +368,7 @@ function useBLE(): BluetoothLowEnergyApi {
 
       Alert.alert(
         "Erro ao ler o BPM",
-        "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
+        "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
         [
           {
             text: "Ok",
@@ -404,12 +403,9 @@ function useBLE(): BluetoothLowEnergyApi {
     console.log("Heart Rate: ", innerHeartRate);
     console.log("Timestamp: ", new Date());
 
-    realm.write(() => {
-      realm.create("HeartRate", {
-        user_id: user?._id,
-        heart_rate: innerHeartRate,
-        created_at: new Date(),
-      });
+    writeHeartBeat({
+      heart_rate: innerHeartRate,
+      created_at: new Date(),
     });
   };
 

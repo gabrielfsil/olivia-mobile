@@ -11,6 +11,8 @@ import { APP_ID } from "@env";
 import { NavigationContainer } from "@react-navigation/native";
 import { Authenticator } from "./src/screens/Public/Authenticator";
 import { BluetoothProvider } from "./src/hooks/bluetooth";
+import { HeartBeat } from "./src/databases/schemas/HeartBeat";
+import { Position } from "./src/databases/schemas/Position";
 
 export default function App() {
   return (
@@ -21,7 +23,13 @@ export default function App() {
           <BluetoothProvider>
             <NavigationContainer>
               <UserProvider fallback={Authenticator}>
-                <RealmProvider>
+                <RealmProvider
+                  sync={{
+                    flexible: true,
+                    onError: console.error,
+                  }}
+                  schema={[HeartBeat, Position]}
+                >
                   <Routes />
                 </RealmProvider>
               </UserProvider>

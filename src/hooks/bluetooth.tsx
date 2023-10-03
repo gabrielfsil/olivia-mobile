@@ -45,6 +45,9 @@ const BluetoothProvider = ({ children }: BluetoothProviderProps) => {
         return { ...state, device: action.payload };
       case "SET_SUBSCRIPTION":
         return { ...state, subscription: action.payload };
+      case "SET_HEART_RATE":
+        console.log(action.payload);
+        return { ...state };
       default:
         return state;
     }
