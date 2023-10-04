@@ -17,7 +17,7 @@ import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
 
 export default function App() {
   return (
-    <AppProvider id={APP_ID} baseUrl="https://realm.mongodb.com">
+    <AppProvider id={"olivia-yeuiz"} baseUrl="https://realm.mongodb.com">
       <ThemeProvider theme={light}>
         <StatusBar backgroundColor={"#855EE0"} />
         <AuthProvider>

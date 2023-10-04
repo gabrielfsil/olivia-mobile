@@ -16,6 +16,7 @@ import base64 from "react-native-base64";
 import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
 import { useBluetooth } from "../../hooks/bluetooth";
+import { HeartBeat } from "../../databases/schemas/HeartBeat";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -56,6 +57,7 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const realm = useRealm();
 
+
   const bleManager = useMemo(() => new BleManager(), []);
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
@@ -66,7 +68,7 @@ function useBLE(): BluetoothLowEnergyApi {
       realm.write(() => {
         realm.create("HeartBeats", {
           _id: new Realm.BSON.ObjectId(),
-          user_id: user?._id,
+          user_id: new Realm.BSON.ObjectId(user?._id),
           heart_rate: heartRate.value,
           created_at: heartRate.timestamp,
         });

@@ -28,7 +28,7 @@ export function BoxConnect({ navigation }: BoxConnectProps) {
       </IconSmartwatch>
       <ContentText>
         <Title>
-          {device
+          { device !== null 
             ? device.name && device.name.toUpperCase()
             : "Nenhum dispositivo"}
         </Title>

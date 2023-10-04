@@ -9,8 +9,11 @@ import {
   Content,
   ContentLoading,
   ExitButton,
+  ForgetButton,
   Header,
+  HeaderContentButton,
   Text,
+  TextForgetButton,
   TextLoading,
 } from "./styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +22,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Device } from "react-native-ble-plx";
 import { ActivityIndicator, Modal } from "react-native";
 import { useRealm } from "../../../hooks/realm";
+import { useApp } from "@realm/react";
+import useLocation from "../../../services/location";
 interface HomeProps {
   navigation: any;
   route: any;
@@ -26,6 +31,7 @@ interface HomeProps {
 
 export function Home({ navigation, route }: HomeProps) {
   const { user, signOut } = useAuth();
+  const app = useApp();
   const {
     state: { device, isConnected },
     dispatch,
@@ -34,6 +40,8 @@ export function Home({ navigation, route }: HomeProps) {
 
   const { disconnectFromDevice, connectToDevice, requestPermissions } =
     useBLE();
+
+  const { monitorLocation, requestLocationsPermissions } = useLocation();
   const [loading, setLoading] = useState(false);
 
   const reconnectToDevice = useCallback(async () => {
@@ -47,6 +55,11 @@ export function Home({ navigation, route }: HomeProps) {
       if (response) {
         console.log("Permissions granted");
         updateContext();
+      }
+    });
+    requestLocationsPermissions().then((response) => {
+      if (response) {
+        monitorLocation();
       }
     });
   }, []);
@@ -81,21 +94,38 @@ export function Home({ navigation, route }: HomeProps) {
       </Modal>
       <Header>
         <Text>Olá</Text>
-        <ExitButton
-          onPress={() => {
-            signOut();
-          }}
-        >
-          <Ionicons name="exit-outline" size={24} color="black" />
-        </ExitButton>
+        <HeaderContentButton>
+          <ExitButton
+            onPress={async () => {
+              await app.currentUser?.logOut();
+              signOut();
+            }}
+          >
+            <Ionicons name="exit-outline" size={24} color="black" />
+          </ExitButton>
+        </HeaderContentButton>
       </Header>
       <Content>
         <BoxConnect navigation={navigation} />
+        {isConnected && device !== null && (
+          <ForgetButton
+            onPress={async () => {
+              await disconnectFromDevice(device);
+              dispatch({
+                type: "SET_DEVICE",
+                payload: null,
+              });
+            }}
+          >
+            <Ionicons name="close-circle-outline" size={24} color="black" />
+            <TextForgetButton>Esquecer dispositivo</TextForgetButton>
+          </ForgetButton>
+        )}
         <PrimaryButton
           onPress={async () => {
-            if (isConnected && device) {
+            if (isConnected && device !== null) {
               await disconnectFromDevice(device);
-            } else if (device) {
+            } else if (device !== null) {
               setLoading(true);
               await connectToDevice(device);
               setLoading(false);

@@ -40,7 +40,7 @@ export function ListDevices({ navigation }: ListDevicesProps) {
 
   return (
     <Container>
-      {loading && <TextLoading>Procurando dispositivos...</TextLoading>}
+      <TextLoading>Procurando dispositivos...</TextLoading>
       <Modal
         animationType="slide"
         transparent={true}
