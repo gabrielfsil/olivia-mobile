@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PermissionsAndroid, Platform, Alert } from "react-native";
 import {
   BleError,
@@ -17,6 +17,7 @@ import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
 import { useBluetooth } from "../../hooks/bluetooth";
 import { HeartBeat } from "../../databases/schemas/HeartBeat";
+import { realmConfig } from "../../databases";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -41,40 +42,14 @@ function maxBackoffJitter(attempt: number) {
   return Math.floor(Math.random() * delay);
 }
 
-interface HeartRate {
-  value: number;
-  timestamp: Date;
-}
-
 function useBLE(): BluetoothLowEnergyApi {
   const { user } = useAuth();
   const { dispatch } = useBluetooth();
-
-  const [heartRate, setHeartRate] = useState<HeartRate>({
-    value: -1,
-    timestamp: new Date(),
-  });
-
   const realm = useRealm();
-
 
   const bleManager = useMemo(() => new BleManager(), []);
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
-
-  useEffect(() => {
-    console.log(heartRate);
-    if (heartRate.value > 0) {
-      realm.write(() => {
-        realm.create("HeartBeats", {
-          _id: new Realm.BSON.ObjectId(),
-          user_id: new Realm.BSON.ObjectId(user?._id),
-          heart_rate: heartRate.value,
-          created_at: heartRate.timestamp,
-        });
-      });
-    }
-  }, [heartRate, realm, user]);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -124,7 +99,7 @@ function useBLE(): BluetoothLowEnergyApi {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: "Location Permission",
+            title: "Permissão de localização",
             message: "Bluetooth Low Energy(BLE) precisa da localização",
             buttonPositive: "OK",
           }
@@ -134,7 +109,7 @@ function useBLE(): BluetoothLowEnergyApi {
           await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
             {
-              title: "Background Location Permission",
+              title: "Permissão de Localização em segundo plano",
               message:
                 "A olivia precisa de acesso a localização em segundo plano",
               buttonPositive: "OK",
@@ -384,52 +359,67 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
-  const onHeartRateUpdate = (
-    error: BleError | null,
-    characteristic: Characteristic | null
-  ) => {
-    if (error) {
-      console.log(error);
+  const onHeartRateUpdate = useCallback(
+    async (error: BleError | null, characteristic: Characteristic | null) => {
+      if (error) {
+        console.log(error);
 
-      Alert.alert(
-        "Erro ao ler o BPM",
-        "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
-        [
-          {
-            text: "Ok",
-            onPress: () => {},
-          },
-        ]
-      );
-      return;
-    } else if (!characteristic?.value) {
-      console.log("No Data was recieved");
-      Alert.alert(
-        "Erro ao ler o BPM",
-        "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
-        [{ text: "OK", onPress: () => {} }]
-      );
-      return;
-    }
+        Alert.alert(
+          "Erro ao ler o BPM",
+          "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
+          [
+            {
+              text: "Ok",
+              onPress: () => {},
+            },
+          ]
+        );
+        return;
+      } else if (!characteristic?.value) {
+        console.log("No Data was recieved");
+        Alert.alert(
+          "Erro ao ler o BPM",
+          "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
+          [{ text: "OK", onPress: () => {} }]
+        );
+        return;
+      }
 
-    const rawData = base64.decode(characteristic.value);
-    let innerHeartRate: number = -1;
+      const rawData = base64.decode(characteristic.value);
+      let innerHeartRate: number = -1;
 
-    const firstBitValue: number = Number(rawData) & 0x01;
+      const firstBitValue: number = Number(rawData) & 0x01;
 
-    if (firstBitValue === 0) {
-      innerHeartRate = rawData[1].charCodeAt(0);
-    } else {
-      innerHeartRate =
-        Number(rawData[1].charCodeAt(0) << 8) +
-        Number(rawData[2].charCodeAt(2));
-    }
+      if (firstBitValue === 0) {
+        innerHeartRate = rawData[1].charCodeAt(0);
+      } else {
+        innerHeartRate =
+          Number(rawData[1].charCodeAt(0) << 8) +
+          Number(rawData[2].charCodeAt(2));
+      }
 
-    setHeartRate({
-      timestamp: new Date(),
-      value: innerHeartRate,
-    });
-  };
+      const data = {
+        heart_rate: innerHeartRate,
+        created_at: new Date(),
+      };
+
+      try {
+        realm.write(async () => {
+          realm.create("HeartBeats", {
+            _id: new Realm.BSON.ObjectId(),
+            user_id: new Realm.BSON.ObjectId(user?._id),
+            heart_rate: data.heart_rate,
+            created_at: data.created_at,
+          });
+        });
+
+        console.log(data);
+      } catch (e) {
+        console.log("Error To Insert:", e);
+      }
+    },
+    [realm, user]
+  );
 
   const startStreamingData = (device: Device) => {
     if (device) {

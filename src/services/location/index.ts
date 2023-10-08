@@ -1,52 +1,39 @@
 import { PermissionsAndroid } from "react-native";
 import Geolocation from "@react-native-community/geolocation";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useRealm } from "../../hooks/realm";
 import { useAuth } from "../../hooks/auth";
+import Realm from "realm";
 
-interface Location {
-  latitude: number;
-  longitude: number;
-  altitude: number | null;
-  timestamp: Date;
-}
 interface LocationProps {
   requestLocationsPermissions: () => Promise<boolean>;
   monitorLocation: () => void;
 }
 
 function useLocation(): LocationProps {
-  const [location, setLocation] = useState<Location>();
 
   const realm = useRealm();
   const { user } = useAuth();
 
-  useEffect(() => {
-    console.log(location);
-    if (location) {
-      realm.write(() => {
-        realm.create("Positions", {
-          _id: new Realm.BSON.ObjectId(),
-          user_id: new Realm.BSON.ObjectId(user?._id),
-          coordinates: location.altitude ? [location.longitude, location.latitude, location.altitude]: [location.longitude, location.latitude],
-          created_at: location.timestamp,
-        });
-      });
-    }
-  }, [location, realm, user]);
-
+ 
   const requestLocationsPermissions = async () => {
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
-          title: "Geolocation Permission",
+          title: "Permissão de Localização",
           message: "Can we access your location?",
           buttonNeutral: "Ask Me Later",
           buttonNegative: "Cancel",
           buttonPositive: "OK",
         }
       );
+
+      const grantedBackground = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+      );
+
+      console.log("grantedBackground", grantedBackground);
       console.log("granted", granted);
       if (granted === "granted") {
         console.log("You can use Geolocation");
@@ -60,15 +47,32 @@ function useLocation(): LocationProps {
     }
   };
 
-  const monitorLocation = () => {
+  const monitorLocation = useCallback(() => {
     Geolocation.watchPosition(
       (position) => {
-        
-        setLocation({
-          longitude: position.coords.longitude,
-          latitude: position.coords.latitude,
-          altitude: position.coords.altitude,
-          timestamp: new Date(),
+        console.log({
+          coordinates: position.coords.altitude
+            ? [
+                position.coords.longitude,
+                position.coords.latitude,
+                position.coords.altitude,
+              ]
+            : [position.coords.longitude, position.coords.latitude],
+          created_at: new Date(),
+        });
+        realm.write(() => {
+          realm.create("Positions", {
+            _id: new Realm.BSON.ObjectId(),
+            user_id: new Realm.BSON.ObjectId(user?._id),
+            coordinates: position.coords.altitude
+              ? [
+                  position.coords.longitude,
+                  position.coords.latitude,
+                  position.coords.altitude,
+                ]
+              : [position.coords.longitude, position.coords.latitude],
+            created_at: new Date(),
+          });
         });
       },
       (error) => {
@@ -77,12 +81,12 @@ function useLocation(): LocationProps {
       },
       {
         enableHighAccuracy: true,
-        timeout: 60000,
+        timeout: 15000,
         maximumAge: 10000,
         interval: 60000,
       }
     );
-  };
+  }, [realm, user]);
 
   return {
     requestLocationsPermissions,

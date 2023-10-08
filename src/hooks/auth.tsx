@@ -12,7 +12,8 @@ interface User {
   name: string;
   email: string;
   permission: number;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 interface AuthState {

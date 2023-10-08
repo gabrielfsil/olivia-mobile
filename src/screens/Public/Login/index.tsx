@@ -65,7 +65,8 @@ export function Login() {
           email: user.profile.email ?? "",
           name: user.profile.name ?? "",
           permission: 1,
-          token: user.accessToken ?? "",
+          accessToken: user.accessToken ?? "",
+          refreshToken: user.refreshToken ?? "",
         });
       } catch (error: any) {
         console.log(error);

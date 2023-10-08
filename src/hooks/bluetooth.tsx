@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRealm } from "@realm/react";
 import React, { createContext, useReducer, useContext } from "react";
 import { Device, Subscription } from "react-native-ble-plx";
+import { useAuth } from "./auth";
 
 interface BluetoothProviderProps {
   children: React.ReactNode;
@@ -37,6 +39,9 @@ const BluetoothProvider = ({ children }: BluetoothProviderProps) => {
   };
 
   const reducer: React.Reducer<BluetoothState, any> = (state, action) => {
+    // let realm = useRealm();
+    // let { user } = useAuth();
+
     switch (action.type) {
       case "SET_CONNECTED":
         return { ...state, isConnected: action.payload };
@@ -46,7 +51,34 @@ const BluetoothProvider = ({ children }: BluetoothProviderProps) => {
       case "SET_SUBSCRIPTION":
         return { ...state, subscription: action.payload };
       case "SET_HEART_RATE":
-        console.log(action.payload);
+        // realm.write(() => {
+        //   realm.create("HeartBeats", {
+        //     _id: new Realm.BSON.ObjectId(),
+        //     user_id: new Realm.BSON.ObjectId(user?._id),
+        //     heart_rate: action.payload.heart_rate,
+        //     created_at: action.payload.created_at,
+        //   });
+        // });
+        // realm.close();
+        // console.log(action.payload);
+        return { ...state };
+      case "SET_LOCATION":
+        // realm.write(() => {
+        //   realm.create("Positions", {
+        //     _id: new Realm.BSON.ObjectId(),
+        //     user_id: new Realm.BSON.ObjectId(user?._id),
+        //     coordinates: action.payload.altitude
+        //       ? [
+        //           action.payload.longitude,
+        //           action.payload.latitude,
+        //           action.payload.altitude,
+        //         ]
+        //       : [action.payload.longitude, action.payload.latitude],
+        //     created_at: action.payload.created_at,
+        //   });
+        // });
+        // realm.close();
+        // console.log(action.payload);
         return { ...state };
       default:
         return state;

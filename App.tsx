@@ -14,38 +14,56 @@ import { HeartBeat } from "./src/databases/schemas/HeartBeat";
 import { Position } from "./src/databases/schemas/Position";
 import { Login } from "./src/screens/Public/Login";
 import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
+import { useEffect } from "react";
+import * as TaskManager from "expo-task-manager";
+import "./src/services/background";
 
 export default function App() {
+  useEffect(() => {
+    TaskManager.isTaskRegisteredAsync(
+      "backgroundServiceConnectionAndMonitoring"
+    ).then((registered) => {
+      if (!registered) {
+        console.log(
+          "Tarefa de conexão e monitoramento em segundo plano não foi registrada"
+        );
+      } else {
+        console.log(
+          "Tarefa de conexão e monitoramento em segundo plano está registrada com sucesso"
+        );
+      }
+    });
+  }, []);
   return (
     <AppProvider id={"olivia-yeuiz"} baseUrl="https://realm.mongodb.com">
       <ThemeProvider theme={light}>
         <StatusBar backgroundColor={"#855EE0"} />
         <AuthProvider>
-          <BluetoothProvider>
-            <NavigationContainer>
-              <UserProvider fallback={Login}>
-                <RealmProvider
-                  sync={{
-                    flexible: true,
-                    onError: (_, error) => {
-                      // Show sync errors in the console
-                      console.error(error);
+          <NavigationContainer>
+            <UserProvider fallback={Login}>
+              <RealmProvider
+                sync={{
+                  flexible: true,
+                  onError: (_, error) => {
+                    // Show sync errors in the console
+                    console.error(error);
+                  },
+                  initialSubscriptions: {
+                    update(subs, realm) {
+                      subs.add(realm.objects(HeartBeat));
+                      subs.add(realm.objects(Position));
                     },
-                    initialSubscriptions: {
-                      update(subs, realm) {
-                        subs.add(realm.objects(HeartBeat));
-                        subs.add(realm.objects(Position));
-                      },
-                    },
-                  }}
-                  schema={[HeartBeat, Position]}
-                  fallback={LoadingIndicator}
-                >
+                  },
+                }}
+                schema={[HeartBeat, Position]}
+                fallback={LoadingIndicator}
+              >
+                <BluetoothProvider>
                   <Routes />
-                </RealmProvider>
-              </UserProvider>
-            </NavigationContainer>
-          </BluetoothProvider>
+                </BluetoothProvider>
+              </RealmProvider>
+            </UserProvider>
+          </NavigationContainer>
         </AuthProvider>
       </ThemeProvider>
     </AppProvider>

@@ -30,6 +30,7 @@ export const Header = styled.View`
 
 export const ExitButton = styled.TouchableOpacity`
   align-items: center;
+  margin: 0 16px;
 `;
 
 export const ForgetButton = styled.TouchableOpacity`
