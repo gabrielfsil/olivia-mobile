@@ -20,7 +20,6 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
-import { AxiosError } from "axios";
 import { useApp } from "@realm/react";
 
 interface LoginSchema {
@@ -111,7 +110,7 @@ export function Login() {
         } else {
           await onPressSignIn({ email: data.email, password: data.password });
         }
-      } catch (err: AxiosError<any> | any) {
+      } catch (err: any) {
         console.log(err);
 
         Alert.alert("Falha na execução:" + err?.message);

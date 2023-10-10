@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Device } from "react-native-ble-plx";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import { API_URL } from "@env";
 interface AuthProviderProps {
   children: React.ReactNode;
 }
@@ -29,7 +27,6 @@ interface SignInCredentials {
 interface AuthContextProps {
   user: User | null;
   device: Device | null;
-  signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): Promise<void>;
   updateDevice(device: Device | null): Promise<void>;
   updateUser(user: User): Promise<void>;
@@ -69,31 +66,6 @@ function AuthProvider({ children }: AuthProviderProps) {
     updateContext();
   }, []);
 
-  const signIn = async ({ email, password }: SignInCredentials) => {
-    const response = await axios({
-      method: "POST",
-      url: `${API_URL}/users/session`,
-      data: { email, password },
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-
-    const { token, user } = response.data;
-
-    await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
-    
-    setData({
-      user: {
-        ...user,
-        token,
-      },
-      device: null,
-    });
-
-    return response.data;
-  };
 
   const signOut = async () => {
     await AsyncStorage.setItem("@olivia:user", "");
@@ -119,7 +91,6 @@ function AuthProvider({ children }: AuthProviderProps) {
       value={{
         user: data.user,
         device: data.device,
-        signIn,
         signOut,
         updateDevice,
         updateUser,
