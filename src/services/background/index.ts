@@ -1,3 +1,4 @@
+import NetInfo from "@react-native-community/netinfo";
 import useBLE from "../ble";
 import useLocation from "../location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,9 +15,13 @@ const backgroundServiceConnectionAndMonitoring = async () => {
   const { monitorLocation } = useLocation();
 
   const user = useUser();
-  console.log(user);
+
   if (user) {
-    await user.refreshCustomData();
+    const state = await NetInfo.fetch();
+
+    if (state.isConnected) {
+      await user.refreshCustomData();
+    }
 
     const deviceStorage = await AsyncStorage.getItem("@olivia:device");
 
