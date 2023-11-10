@@ -16,13 +16,13 @@ import { Login } from "./src/screens/Public/Login";
 import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
 import { useEffect } from "react";
 import * as TaskManager from "expo-task-manager";
-import "./src/services/background";
+import { registerBackgroundFetchAsync } from "./src/services/background";
 
 export default function App() {
   useEffect(() => {
     TaskManager.isTaskRegisteredAsync(
       "backgroundServiceConnectionAndMonitoring"
-    ).then((registered) => {
+    ).then(async (registered) => {
       if (!registered) {
         console.log(
           "Tarefa de conexão e monitoramento em segundo plano não foi registrada"
@@ -31,9 +31,11 @@ export default function App() {
         console.log(
           "Tarefa de conexão e monitoramento em segundo plano está registrada com sucesso"
         );
+        await registerBackgroundFetchAsync();
       }
     });
   }, []);
+
   return (
     <AppProvider id={"olivia-yeuiz"} baseUrl="https://realm.mongodb.com">
       <ThemeProvider theme={light}>
