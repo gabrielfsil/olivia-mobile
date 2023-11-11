@@ -14,13 +14,14 @@ import * as ExpoDevice from "expo-device";
 
 import base64 from "react-native-base64";
 import { useRealm } from "../../hooks/realm";
+import realmManager from "../realm/manager";
 import { useAuth } from "../../hooks/auth";
 import { useBluetooth } from "../../hooks/bluetooth";
-import { HeartBeat } from "../../databases/schemas/HeartBeat";
-import { realmConfig } from "../../databases";
 
 const HEART_RATE_UUID = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
+import bluetoothManager from "./manager";
+import userManager from "../user/manager";
 
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
@@ -47,7 +48,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const { dispatch } = useBluetooth();
   const realm = useRealm();
 
-  const bleManager = useMemo(() => new BleManager(), []);
+  const bleManager = bluetoothManager.getBleManager();
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
 
@@ -178,14 +179,12 @@ function useBLE(): BluetoothLowEnergyApi {
             }
           });
 
-          console.log("Connecting to device");
           const deviceConnected = await bleManager.connectToDevice(device.id, {
             autoConnect: true,
           });
 
           await deviceConnected.discoverAllServicesAndCharacteristics();
 
-          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
 
           bleManager.stopDeviceScan();
 
@@ -198,8 +197,6 @@ function useBLE(): BluetoothLowEnergyApi {
             type: "SET_CONNECTED",
             payload: true,
           });
-
-          console.log("Connected to device");
 
           await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -233,8 +230,6 @@ function useBLE(): BluetoothLowEnergyApi {
       try {
         const connected = await device.isConnected();
 
-        console.log("CONNECTED: ", connected);
-
         if (connected) {
           bleManager.startDeviceScan(null, null, (error, device) => {
             if (error) {
@@ -243,8 +238,6 @@ function useBLE(): BluetoothLowEnergyApi {
           });
 
           await device.discoverAllServicesAndCharacteristics();
-
-          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
 
           const services = await device.services();
 
@@ -290,8 +283,6 @@ function useBLE(): BluetoothLowEnergyApi {
       try {
         const connected = await device.isConnected();
 
-        console.log("CONNECTED: ", connected);
-
         if (connected) {
           bleManager.startDeviceScan(null, null, (error, device) => {
             if (error) {
@@ -300,8 +291,6 @@ function useBLE(): BluetoothLowEnergyApi {
           });
 
           await device.discoverAllServicesAndCharacteristics();
-
-          console.log("DISCOVERED ALL SERVICES AND CHARACTERISTICS");
 
           const characteristics = await device.characteristicsForService(
             service
@@ -349,7 +338,6 @@ function useBLE(): BluetoothLowEnergyApi {
           type: "SET_CONNECTED",
           payload: false,
         });
-        console.log("DISCONNECTED");
       });
     } else {
       dispatch({
@@ -376,7 +364,6 @@ function useBLE(): BluetoothLowEnergyApi {
         );
         return;
       } else if (!characteristic?.value) {
-        console.log("No Data was recieved");
         Alert.alert(
           "Erro ao ler o BPM",
           "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
@@ -404,16 +391,19 @@ function useBLE(): BluetoothLowEnergyApi {
       };
 
       try {
-        realm.write(async () => {
-          realm.create("HeartBeats", {
-            _id: new Realm.BSON.ObjectId(),
-            user_id: new Realm.BSON.ObjectId(user?._id),
-            heart_rate: data.heart_rate,
-            created_at: data.created_at,
-          });
-        });
+        const realmInstance = await realmManager.getRealmInstance();
+        const userInstance = userManager.getUser();
 
-        console.log(data);
+        if (userInstance) {
+          realmInstance.write(async () => {
+            realmInstance.create("HeartBeats", {
+              _id: new Realm.BSON.ObjectId(),
+              user_id: new Realm.BSON.ObjectId(userInstance._id),
+              heart_rate: data.heart_rate,
+              created_at: data.created_at,
+            });
+          });
+        }
       } catch (e) {
         console.log("Error To Insert:", e);
       }
@@ -434,8 +424,6 @@ function useBLE(): BluetoothLowEnergyApi {
         payload: subscription,
       });
 
-      console.log("Started monitoring heart rate");
-
       device.onDisconnected((error, device) => {
         if (error) {
           console.log("Error: ", error);
@@ -445,7 +433,6 @@ function useBLE(): BluetoothLowEnergyApi {
           payload: false,
         });
 
-        console.log("Disconnected from device");
       });
 
       return subscription;
@@ -472,5 +459,145 @@ function useBLE(): BluetoothLowEnergyApi {
     listCharacteristics,
   };
 }
+
+const onHeartRateUpdate = async (
+  error: BleError | null,
+  characteristic: Characteristic | null
+) => {
+  if (error) {
+    console.log(error);
+
+    Alert.alert(
+      "Erro ao ler o BPM",
+      "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
+      [
+        {
+          text: "Ok",
+          onPress: () => {},
+        },
+      ]
+    );
+    return;
+  } else if (!characteristic?.value) {
+    Alert.alert(
+      "Erro ao ler o BPM",
+      "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
+      [{ text: "OK", onPress: () => {} }]
+    );
+    return;
+  }
+
+  const rawData = base64.decode(characteristic.value);
+  let innerHeartRate: number = -1;
+
+  const firstBitValue: number = Number(rawData) & 0x01;
+
+  if (firstBitValue === 0) {
+    innerHeartRate = rawData[1].charCodeAt(0);
+  } else {
+    innerHeartRate =
+      Number(rawData[1].charCodeAt(0) << 8) + Number(rawData[2].charCodeAt(2));
+  }
+
+  const data = {
+    heart_rate: innerHeartRate,
+    created_at: new Date(),
+  };
+
+  try {
+    const realmInstance = await realmManager.getRealmInstance();
+    const userInstance = userManager.getUser();
+
+    if (userInstance) {
+      realmInstance.write(async () => {
+        realmInstance.create("HeartBeats", {
+          _id: new Realm.BSON.ObjectId(),
+          user_id: new Realm.BSON.ObjectId(userInstance._id),
+          heart_rate: data.heart_rate,
+          created_at: data.created_at,
+        });
+      });
+    }
+
+  } catch (e) {
+    console.log("Error To Insert:", e);
+  }
+};
+
+const startStreamingData = (device: Device) => {
+  if (device) {
+    const subscription = device.monitorCharacteristicForService(
+      HEART_RATE_UUID,
+      HEART_RATE_CHARACTERISTIC,
+      onHeartRateUpdate
+    );
+
+
+    device.onDisconnected((error, device) => {
+      if (error) {
+        console.log("Error: ", error);
+      }
+    });
+
+    return subscription;
+  }
+
+  return null;
+};
+const connectToDeviceWithRetry = (max_attempt: number = 5) => {
+  let attempt = 0;
+
+  return async function createConnection(device: Device) {
+    const bleManager = bluetoothManager.getBleManager();
+    try {
+      const isConnected = await device.isConnected();
+
+      if (!isConnected) {
+        bleManager.startDeviceScan(null, null, (error, device) => {
+          if (error) {
+            console.log(error);
+          }
+        });
+
+        const deviceConnected = await bleManager.connectToDevice(device.id, {
+          autoConnect: true,
+        });
+
+        await deviceConnected.discoverAllServicesAndCharacteristics();
+
+
+        bleManager.stopDeviceScan();
+
+
+        startStreamingData(deviceConnected);
+      }
+    } catch (e) {
+      bleManager.stopDeviceScan();
+      if (attempt < max_attempt) {
+        attempt += 1;
+        const delay = maxBackoffJitter(attempt);
+        console.warn(
+          `Request failed to connect. Retry attempt ${attempt} after ${delay}ms`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return createConnection(device);
+      }
+    }
+  };
+};
+
+const connectToDevice = async (device: Device) => {
+  const createConnection = connectToDeviceWithRetry(8);
+
+  await createConnection(device);
+};
+
+const createDevice = (device: NativeDevice) => {
+  const bleManager = bluetoothManager.getBleManager();
+  const newDevice = new Device(device, bleManager);
+
+  return newDevice;
+};
+export { connectToDevice, createDevice };
 
 export default useBLE;

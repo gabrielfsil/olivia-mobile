@@ -22,8 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator, Modal } from "react-native";
 import { useApp, useUser } from "@realm/react";
 import useLocation from "../../../services/location";
-import * as BackgroundFetch from "expo-background-fetch";
-import * as TaskManager from "expo-task-manager";
+import { checkStatusAsync } from "../../../services/background";
 
 interface HomeProps {
   navigation: any;
@@ -34,8 +33,6 @@ interface Permissions {
   location: boolean;
   bluetooth: boolean;
 }
-
-const BACKGROUND_FETCH_TASK = "BackgroundServiceConnectionAndMonitoring";
 
 export function Home({ navigation, route }: HomeProps) {
   const { signOut } = useAuth();
@@ -62,55 +59,40 @@ export function Home({ navigation, route }: HomeProps) {
 
   const reconnectToDevice = useCallback(async () => {
     if (!isConnected && device) {
-      console.log("Reconnecting to device...");
-      await connectToDevice(device);
+      if(device){
+        const connected = await device.isConnected();
+
+        if(!connected){
+          await connectToDevice(device);
+        
+        }else{
+          dispatch({
+            type: "SET_CONNECTED",
+            payload: true
+          })
+        }
+      }
     }
   }, [isConnected, device]);
 
-  const registerBackgroundFetchAsync = async () => {
-    return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 60 * 15,
-      stopOnTerminate: false,
-      startOnBoot: true,
-    });
-  };
-
-  const checkStatusAsync = async () => {
-    const status = await BackgroundFetch.getStatusAsync();
-
-    console.log("statys", status);
-
-    const isRegistered = await TaskManager.isTaskRegisteredAsync(
-      BACKGROUND_FETCH_TASK
-    );
-
-    if (!isRegistered) {
-      await registerBackgroundFetchAsync();
-    } else {
-      console.log("Task is registered");
-    }
-  };
-
   useEffect(() => {
     requestPermissions().then((response) => {
-      console.log("BLE: ", response);
       if (response) {
-        console.log("Permissions granted");
         setPermissions((prev) => ({ ...prev, bluetooth: true }));
         updateContext();
       }
     });
-    requestLocationsPermissions().then((response) => {
-      console.log("Location: ", response);
-      if (response) {
-        monitorLocation();
-        setPermissions((prev) => ({ ...prev, location: true }));
-      }
-    });
+    requestLocationsPermissions()
+      .then((response) => {
+        if (response) {
+          monitorLocation();
+          setPermissions((prev) => ({ ...prev, location: true }));
+        }
+      })
+      .catch((err) => console.log(err));
   }, []);
 
   useEffect(() => {
-    console.log(permissions);
     if (permissions.bluetooth && permissions.location) {
       checkStatusAsync();
     }

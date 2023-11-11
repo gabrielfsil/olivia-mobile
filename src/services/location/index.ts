@@ -33,13 +33,9 @@ function useLocation(): LocationProps {
         PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
       );
 
-      console.log("grantedBackground", grantedBackground);
-      console.log("granted", granted);
       if (granted === "granted") {
-        console.log("You can use Geolocation");
         return true;
       } else {
-        console.log("You cannot use Geolocation");
         return false;
       }
     } catch (err) {
@@ -50,16 +46,7 @@ function useLocation(): LocationProps {
   const monitorLocation = useCallback(() => {
     Geolocation.watchPosition(
       (position) => {
-        console.log({
-          coordinates: position.coords.altitude
-            ? [
-                position.coords.longitude,
-                position.coords.latitude,
-                position.coords.altitude,
-              ]
-            : [position.coords.longitude, position.coords.latitude],
-          created_at: new Date(),
-        });
+       
         realm.write(() => {
           realm.create("Positions", {
             _id: new Realm.BSON.ObjectId(),
