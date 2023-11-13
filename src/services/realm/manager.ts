@@ -11,55 +11,60 @@ interface IUpdateToken {
 
 class RealmManager {
   private realmInstance: Realm;
+  private user: Realm.User | null;
   private access_token: string | null;
   private refresh_token: string | null;
 
   constructor() {
     this.realmInstance = new Realm(realmConfig);
+    this.user = null;
     this.access_token = null;
     this.refresh_token = null;
   }
 
-  updateToken({ access_token, refresh_token }: IUpdateToken) {
+  updateUser(user: Realm.User | null) {
+    this.user = user;
+  }
+
+  updateTokens({ access_token, refresh_token }: IUpdateToken) {
     this.access_token = access_token;
     this.refresh_token = refresh_token;
   }
 
   async getRealmInstance() {
-    if (!this.realmInstance) {
-      if (this.access_token) {
-        this.realmInstance = await Realm.open({
-          sync: {
-            flexible: true,
-            initialSubscriptions: {
-              update(subs, realm) {
-                subs.add(realm.objects(HeartBeat));
-                subs.add(realm.objects(Position));
-              },
-              rerunOnOpen: true,
+    if (this.access_token && this.user) {
+      const app = new Realm.App({ id: "olivia-yeuiz" });
+
+      this.realmInstance = await Realm.open({
+        sync: {
+          flexible: true,
+          initialSubscriptions: {
+            update(subs, realm) {
+              subs.add(realm.objects(HeartBeat));
+              subs.add(realm.objects(Position));
             },
-            user: {
-              accessToken: () => this.access_token,
-            },
+            rerunOnOpen: true,
           },
-          ...realmConfig,
-        } as Realm.Configuration);
-      } else {
-        this.realmInstance = await Realm.open(realmConfig);
-      }
+          user: app.currentUser
+        },
+        ...realmConfig,
+      } as Realm.Configuration);
+      return this.realmInstance;
     }
-    return this.realmInstance;
+  }
+
+  getUser() {
+    return this.user;
   }
 
   async refreshToken() {
     try {
-        
-      if (this.refresh_token) {
+      if (this.user) {
         const response = await axios({
           url: `https://sa-east-1.aws.realm.mongodb.com/api/client/v2.0/auth/session`,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${this.refresh_token}`,
+            Authorization: `Bearer ${this.user.refreshToken}`,
           },
           method: "POST",
         });
@@ -72,6 +77,17 @@ class RealmManager {
       }
     } catch (err) {
       console.log("ERRO REFRESH TOKEN ", err);
+    }
+  }
+
+  async syncData() {
+    try {
+      const realm = await this.getRealmInstance();
+      console.log("Iniciando sincronização...");
+      await realm?.syncSession?.uploadAllLocalChanges();
+      console.log("Concluído");
+    } catch (err) {
+      console.log("Erro na sincronização: ", err);
     }
   }
 }

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { BoxConnect } from "../../../components/BoxConnect";
 import { PrimaryButton } from "../../../components/PrimaryButton";
-import { SecondaryButton } from "../../../components/SecondaryButton";
 import { useAuth } from "../../../hooks/auth";
 import useBLE from "../../../services/ble";
 import {
@@ -23,6 +22,7 @@ import { ActivityIndicator, Modal } from "react-native";
 import { useApp, useUser } from "@realm/react";
 import useLocation from "../../../services/location";
 import { checkStatusAsync } from "../../../services/background";
+import realmManager from "../../../services/realm/manager";
 
 interface HomeProps {
   navigation: any;
@@ -57,19 +57,22 @@ export function Home({ navigation, route }: HomeProps) {
     bluetooth: false,
   });
 
+  const syncData = useCallback(async () => {
+    await realmManager.syncData();
+  }, []);
+
   const reconnectToDevice = useCallback(async () => {
     if (!isConnected && device) {
-      if(device){
+      if (device) {
         const connected = await device.isConnected();
 
-        if(!connected){
+        if (!connected) {
           await connectToDevice(device);
-        
-        }else{
+        } else {
           dispatch({
             type: "SET_CONNECTED",
-            payload: true
-          })
+            payload: true,
+          });
         }
       }
     }
@@ -90,6 +93,7 @@ export function Home({ navigation, route }: HomeProps) {
         }
       })
       .catch((err) => console.log(err));
+      syncData()
   }, []);
 
   useEffect(() => {

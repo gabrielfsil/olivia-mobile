@@ -14,6 +14,8 @@ const backgroundServiceConnectionAndMonitoring = async () => {
 
   if (state.isConnected) {
     await realmManager.refreshToken();
+
+    await realmManager.syncData();
   }
 
   const deviceStorage = await AsyncStorage.getItem("@olivia:device");
@@ -44,7 +46,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 
 export async function registerBackgroundFetchAsync() {
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 60 * 10,
+    minimumInterval: 10,
     stopOnTerminate: false,
     startOnBoot: true,
   });
@@ -53,9 +55,15 @@ export async function registerBackgroundFetchAsync() {
 export async function checkStatusAsync() {
   const status = await BackgroundFetch.getStatusAsync();
 
+  console.log(status);
+
   const isRegistered = await TaskManager.isTaskRegisteredAsync(
     BACKGROUND_FETCH_TASK
   );
+
+  const task = await TaskManager.getRegisteredTasksAsync();
+
+  console.log(task);
 
   if (!isRegistered) {
     await registerBackgroundFetchAsync();

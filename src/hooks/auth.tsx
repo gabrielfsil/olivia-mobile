@@ -55,7 +55,8 @@ function AuthProvider({ children }: AuthProviderProps) {
 
       if (user) {
         userManager.updateUser(JSON.parse(user));
-        realmManager.updateToken({
+        realmManager.updateUser(JSON.parse(user));
+        realmManager.updateTokens({
           access_token: JSON.parse(user).accessToken,
           refresh_token: JSON.parse(user).refreshToken,
         });
@@ -77,7 +78,8 @@ function AuthProvider({ children }: AuthProviderProps) {
     await AsyncStorage.setItem("@olivia:device", "");
 
     userManager.updateUser(null);
-    realmManager.updateToken({
+    realmManager.updateUser(null);
+    realmManager.updateTokens({
       access_token: null,
       refresh_token: null,
     });
@@ -94,10 +96,11 @@ function AuthProvider({ children }: AuthProviderProps) {
     await AsyncStorage.setItem("@olivia:user", JSON.stringify(user));
 
     userManager.updateUser(user);
-    realmManager.updateToken({
+    realmManager.updateTokens({
       access_token: user.accessToken,
       refresh_token: user.refreshToken,
     });
+    
     setData({ user, device: data.device });
   };
 

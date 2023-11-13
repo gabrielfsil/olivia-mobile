@@ -21,6 +21,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { useApp } from "@realm/react";
+import realmManager from "../../../services/realm/manager";
 
 interface LoginSchema {
   email: string;
@@ -59,6 +60,7 @@ export function Login() {
       try {
         const creds = Realm.Credentials.emailPassword(email, password);
         const user = await app.logIn(creds);
+        realmManager.updateUser(user);
         updateUser({
           _id: user.id,
           email: user.profile.email ?? "",
@@ -72,7 +74,7 @@ export function Login() {
         Alert.alert(`Falha ao entrar: ${error?.message}`);
       }
     },
-    [app, updateUser]
+    [app, updateUser, realmManager]
   );
 
   // onPressSignIn() uses the emailPassword authentication provider to log in

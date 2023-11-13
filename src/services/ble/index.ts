@@ -185,7 +185,6 @@ function useBLE(): BluetoothLowEnergyApi {
 
           await deviceConnected.discoverAllServicesAndCharacteristics();
 
-
           bleManager.stopDeviceScan();
 
           dispatch({
@@ -391,21 +390,17 @@ function useBLE(): BluetoothLowEnergyApi {
       };
 
       try {
-        const realmInstance = await realmManager.getRealmInstance();
-        const userInstance = userManager.getUser();
-
-        if (userInstance) {
-          realmInstance.write(async () => {
-            realmInstance.create("HeartBeats", {
-              _id: new Realm.BSON.ObjectId(),
-              user_id: new Realm.BSON.ObjectId(userInstance._id),
-              heart_rate: data.heart_rate,
-              created_at: data.created_at,
-            });
+        realm.write(async () => {
+          realm.create("HeartBeats", {
+            _id: new Realm.BSON.ObjectId(),
+            user_id: new Realm.BSON.ObjectId(user?._id),
+            heart_rate: data.heart_rate,
+            created_at: data.created_at,
           });
-        }
+        });
+        console.log("Componente: ", data);
       } catch (e) {
-        console.log("Error To Insert:", e);
+        console.log("Error To Insert (hook):", e);
       }
     },
     [realm, user]
@@ -432,7 +427,6 @@ function useBLE(): BluetoothLowEnergyApi {
           type: "SET_CONNECTED",
           payload: false,
         });
-
       });
 
       return subscription;
@@ -508,7 +502,7 @@ const onHeartRateUpdate = async (
     const realmInstance = await realmManager.getRealmInstance();
     const userInstance = userManager.getUser();
 
-    if (userInstance) {
+    if (realmInstance && userInstance) {
       realmInstance.write(async () => {
         realmInstance.create("HeartBeats", {
           _id: new Realm.BSON.ObjectId(),
@@ -517,10 +511,10 @@ const onHeartRateUpdate = async (
           created_at: data.created_at,
         });
       });
+      console.log("Background: ", data);
     }
-
   } catch (e) {
-    console.log("Error To Insert:", e);
+    console.log("Error To Insert (background):", e);
   }
 };
 
@@ -531,7 +525,6 @@ const startStreamingData = (device: Device) => {
       HEART_RATE_CHARACTERISTIC,
       onHeartRateUpdate
     );
-
 
     device.onDisconnected((error, device) => {
       if (error) {
@@ -565,9 +558,7 @@ const connectToDeviceWithRetry = (max_attempt: number = 5) => {
 
         await deviceConnected.discoverAllServicesAndCharacteristics();
 
-
         bleManager.stopDeviceScan();
-
 
         startStreamingData(deviceConnected);
       }
