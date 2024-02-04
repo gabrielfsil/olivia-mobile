@@ -13,9 +13,12 @@ import { HeartBeat } from "./src/databases/schemas/HeartBeat";
 import { Position } from "./src/databases/schemas/Position";
 import { Login } from "./src/screens/Public/Login";
 import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
+import { LogError } from "./src/databases/schemas/LogError";
 import "./src/services/background";
+import { realmConfig } from "./src/databases";
 
 export default function App() {
+
   return (
     <AppProvider id={"olivia-yeuiz"} baseUrl="https://realm.mongodb.com">
       <ThemeProvider theme={light}>
@@ -34,10 +37,12 @@ export default function App() {
                     update(subs, realm) {
                       subs.add(realm.objects(HeartBeat));
                       subs.add(realm.objects(Position));
+                      subs.add(realm.objects(LogError));
                     },
                   },
                 }}
-                schema={[HeartBeat, Position]}
+                schema={realmConfig.schema}
+                schemaVersion={realmConfig.schemaVersion}
                 fallback={LoadingIndicator}
               >
                 <BluetoothProvider>

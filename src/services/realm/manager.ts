@@ -3,6 +3,7 @@ import { realmConfig } from "../../databases";
 import { HeartBeat } from "../../databases/schemas/HeartBeat";
 import { Position } from "../../databases/schemas/Position";
 import axios from "axios";
+import { LogError } from "../../databases/schemas/LogError";
 
 interface IUpdateToken {
   access_token: string | null;
@@ -42,6 +43,7 @@ class RealmManager {
             update(subs, realm) {
               subs.add(realm.objects(HeartBeat));
               subs.add(realm.objects(Position));
+              subs.add(realm.objects(LogError));
             },
             rerunOnOpen: true,
           },

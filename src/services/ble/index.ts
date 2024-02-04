@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PermissionsAndroid, Platform, Alert } from "react-native";
 import {
   BleError,
-  BleManager,
   Characteristic,
   Device,
   NativeDevice,
@@ -200,6 +199,7 @@ function useBLE(): BluetoothLowEnergyApi {
           await new Promise((resolve) => setTimeout(resolve, 3000));
 
           startStreamingData(deviceConnected);
+          console.log("Connected");
         }
       } catch (e) {
         bleManager.stopDeviceScan();
@@ -350,7 +350,6 @@ function useBLE(): BluetoothLowEnergyApi {
     async (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) {
         console.log(error);
-
         Alert.alert(
           "Erro ao ler o BPM",
           "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
@@ -361,6 +360,42 @@ function useBLE(): BluetoothLowEnergyApi {
             },
           ]
         );
+        try {
+          if (!realm.isClosed) {
+            realm.write(async () => {
+              realm.create("LogErrors", {
+                _id: new Realm.BSON.ObjectId(),
+                user_id: new Realm.BSON.ObjectId(user?._id),
+                type: "BLE Error",
+                created_at: new Date(),
+              });
+            });
+          } else {
+            realmManager
+              .getRealmInstance()
+              .then((realmInstance) => {
+                const userInstance = userManager.getUser();
+
+                if (realmInstance && userInstance) {
+                  realmInstance.write(async () => {
+                    realmInstance.create("LogErrors", {
+                      _id: new Realm.BSON.ObjectId(),
+                      user_id: new Realm.BSON.ObjectId(userInstance._id),
+                      type: "BLE Error",
+                      created_at: new Date(),
+                    });
+                  });
+                }
+              })
+              .catch((err: any) => {
+                console.log("Error To Reopen: ", err);
+              });
+            console.log("Error: Realm has been closed");
+          }
+        } catch (e) {
+          console.log("BLE Error:", e);
+        }
+
         return;
       } else if (!characteristic?.value) {
         Alert.alert(
@@ -368,6 +403,41 @@ function useBLE(): BluetoothLowEnergyApi {
           "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
           [{ text: "OK", onPress: () => {} }]
         );
+        try {
+          if (!realm.isClosed) {
+            realm.write(async () => {
+              realm.create("LogErrors", {
+                _id: new Realm.BSON.ObjectId(),
+                user_id: new Realm.BSON.ObjectId(user?._id),
+                type: "BLE Error",
+                created_at: new Date(),
+              });
+            });
+          } else {
+            realmManager
+              .getRealmInstance()
+              .then((realmInstance) => {
+                const userInstance = userManager.getUser();
+
+                if (realmInstance && userInstance) {
+                  realmInstance.write(async () => {
+                    realmInstance.create("LogErrors", {
+                      _id: new Realm.BSON.ObjectId(),
+                      user_id: new Realm.BSON.ObjectId(userInstance._id),
+                      type: "BLE Error",
+                      created_at: new Date(),
+                    });
+                  });
+                }
+              })
+              .catch((err: any) => {
+                console.log("Error To Reopen: ", err);
+              });
+            console.log("Error: Realm has been closed");
+          }
+        } catch (e) {
+          console.log("BLE Error:", e);
+        }
         return;
       }
 
@@ -390,17 +460,33 @@ function useBLE(): BluetoothLowEnergyApi {
       };
 
       try {
-        realm.write(async () => {
-          realm.create("HeartBeats", {
-            _id: new Realm.BSON.ObjectId(),
-            user_id: new Realm.BSON.ObjectId(user?._id),
-            heart_rate: data.heart_rate,
-            created_at: data.created_at,
+        if (!realm.isClosed) {
+          realm.write(async () => {
+            realm.create("HeartBeats", {
+              _id: new Realm.BSON.ObjectId(),
+              user_id: new Realm.BSON.ObjectId(user?._id),
+              heart_rate: data.heart_rate,
+              created_at: data.created_at,
+            });
           });
-        });
-        console.log("Componente: ", data);
+        } else {
+          const realmInstance = await realmManager.getRealmInstance();
+          const userInstance = userManager.getUser();
+
+          if (realmInstance && userInstance) {
+            realmInstance.write(async () => {
+              realmInstance.create("HeartBeats", {
+                _id: new Realm.BSON.ObjectId(),
+                user_id: new Realm.BSON.ObjectId(userInstance._id),
+                heart_rate: data.heart_rate,
+                created_at: data.created_at,
+              });
+            });
+          }
+          console.log("Error: Realm has been closed");
+        }
       } catch (e) {
-        console.log("Error To Insert (hook):", e);
+        console.log("Error To Insert:", e);
       }
     },
     [realm, user]
@@ -421,7 +507,41 @@ function useBLE(): BluetoothLowEnergyApi {
 
       device.onDisconnected((error, device) => {
         if (error) {
-          console.log("Error: ", error);
+          try {
+            if (!realm.isClosed) {
+              realm.write(async () => {
+                realm.create("LogErrors", {
+                  _id: new Realm.BSON.ObjectId(),
+                  user_id: new Realm.BSON.ObjectId(user?._id),
+                  type: "Device Disconnected",
+                  created_at: new Date(),
+                });
+              });
+            } else {
+              realmManager
+                .getRealmInstance()
+                .then((realmInstance) => {
+                  const userInstance = userManager.getUser();
+
+                  if (realmInstance && userInstance) {
+                    realmInstance.write(async () => {
+                      realmInstance.create("LogErrors", {
+                        _id: new Realm.BSON.ObjectId(),
+                        user_id: new Realm.BSON.ObjectId(userInstance._id),
+                        type: "Device Disconnected",
+                        created_at: new Date(),
+                      });
+                    });
+                  }
+                })
+                .catch((err: any) => {
+                  console.log("Error To Reopen: ", err);
+                });
+              console.log("Error: Realm has been closed");
+            }
+          } catch (e) {
+            console.log("Error: ", error);
+          }
         }
         dispatch({
           type: "SET_CONNECTED",
@@ -471,6 +591,23 @@ const onHeartRateUpdate = async (
         },
       ]
     );
+    try {
+      const realmInstance = await realmManager.getRealmInstance();
+      const userInstance = userManager.getUser();
+
+      if (realmInstance && userInstance) {
+        realmInstance.write(async () => {
+          realmInstance.create("LogErrors", {
+            _id: new Realm.BSON.ObjectId(),
+            user_id: new Realm.BSON.ObjectId(userInstance._id),
+            type: "BLE Error",
+            created_at: new Date(),
+          });
+        });
+      }
+    } catch (e) {
+      console.log("BLE Error:", e);
+    }
     return;
   } else if (!characteristic?.value) {
     Alert.alert(
@@ -478,6 +615,23 @@ const onHeartRateUpdate = async (
       "Aconteceu um erro ao ler o BPM, tente reiniciar sua conexão com o dispositivo",
       [{ text: "OK", onPress: () => {} }]
     );
+    try {
+      const realmInstance = await realmManager.getRealmInstance();
+      const userInstance = userManager.getUser();
+
+      if (realmInstance && userInstance) {
+        realmInstance.write(async () => {
+          realmInstance.create("LogErrors", {
+            _id: new Realm.BSON.ObjectId(),
+            user_id: new Realm.BSON.ObjectId(userInstance._id),
+            type: "BLE Error",
+            created_at: new Date(),
+          });
+        });
+      }
+    } catch (e) {
+      console.log("BLE Error:", e);
+    }
     return;
   }
 
@@ -511,7 +665,6 @@ const onHeartRateUpdate = async (
           created_at: data.created_at,
         });
       });
-      console.log("Background: ", data);
     }
   } catch (e) {
     console.log("Error To Insert (background):", e);
@@ -528,7 +681,29 @@ const startStreamingData = (device: Device) => {
 
     device.onDisconnected((error, device) => {
       if (error) {
-        console.log("Error: ", error);
+        try {
+          realmManager
+            .getRealmInstance()
+            .then((realmInstance) => {
+              const userInstance = userManager.getUser();
+
+              if (realmInstance && userInstance) {
+                realmInstance.write(async () => {
+                  realmInstance.create("LogErrors", {
+                    _id: new Realm.BSON.ObjectId(),
+                    user_id: new Realm.BSON.ObjectId(userInstance._id),
+                    type: "Device Disconnected",
+                    created_at: new Date(),
+                  });
+                });
+              }
+            })
+            .catch((err: any) => {
+              console.log("Error: ", err);
+            });
+        } catch (e) {
+          console.log("Error: ", error);
+        }
       }
     });
 
