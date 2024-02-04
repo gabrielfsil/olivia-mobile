@@ -199,7 +199,6 @@ function useBLE(): BluetoothLowEnergyApi {
           await new Promise((resolve) => setTimeout(resolve, 3000));
 
           startStreamingData(deviceConnected);
-          console.log("Connected");
         }
       } catch (e) {
         bleManager.stopDeviceScan();
@@ -349,7 +348,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const onHeartRateUpdate = useCallback(
     async (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) {
-        console.log(error);
+      
         Alert.alert(
           "Erro ao ler o BPM",
           "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
@@ -366,7 +365,7 @@ function useBLE(): BluetoothLowEnergyApi {
               realm.create("LogErrors", {
                 _id: new Realm.BSON.ObjectId(),
                 user_id: new Realm.BSON.ObjectId(user?._id),
-                type: "BLE Error",
+                type: error.message,
                 created_at: new Date(),
               });
             });
@@ -381,7 +380,7 @@ function useBLE(): BluetoothLowEnergyApi {
                     realmInstance.create("LogErrors", {
                       _id: new Realm.BSON.ObjectId(),
                       user_id: new Realm.BSON.ObjectId(userInstance._id),
-                      type: "BLE Error",
+                      type: error.message,
                       created_at: new Date(),
                     });
                   });
@@ -579,8 +578,7 @@ const onHeartRateUpdate = async (
   characteristic: Characteristic | null
 ) => {
   if (error) {
-    console.log(error);
-
+   
     Alert.alert(
       "Erro ao ler o BPM",
       "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
@@ -600,7 +598,7 @@ const onHeartRateUpdate = async (
           realmInstance.create("LogErrors", {
             _id: new Realm.BSON.ObjectId(),
             user_id: new Realm.BSON.ObjectId(userInstance._id),
-            type: "BLE Error",
+            type: error.message,
             created_at: new Date(),
           });
         });
