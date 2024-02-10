@@ -8,8 +8,7 @@ import realmManager from "../realm/manager";
 const BACKGROUND_FETCH_TASK = "BackgroundServiceConnectionAndMonitoring";
 
 const backgroundServiceConnectionAndMonitoring = async () => {
-  console.log("Função rodando em background");
-
+ 
   const state = await NetInfo.fetch();
 
   if (state.isConnected) {
@@ -39,35 +38,27 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (err) {
-    console.log(err);
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }
 });
 
 export async function registerBackgroundFetchAsync() {
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 3,
+    minimumInterval: 5,
     stopOnTerminate: false,
     startOnBoot: true,
   });
 }
 
 export async function checkStatusAsync() {
-  const status = await BackgroundFetch.getStatusAsync();
-
-  console.log(status);
-
+  
   const isRegistered = await TaskManager.isTaskRegisteredAsync(
     BACKGROUND_FETCH_TASK
   );
 
-  const task = await TaskManager.getRegisteredTasksAsync();
-
-  console.log(task);
+  await TaskManager.getRegisteredTasksAsync();
 
   if (!isRegistered) {
     await registerBackgroundFetchAsync();
-  } else {
-    console.log("Task is registered");
-  }
+  } 
 }

@@ -45,9 +45,8 @@ class RealmManager {
               subs.add(realm.objects(Position));
               subs.add(realm.objects(LogError));
             },
-            rerunOnOpen: true,
           },
-          user: app.currentUser
+          user: app.currentUser,
         },
         ...realmConfig,
       } as Realm.Configuration);

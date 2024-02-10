@@ -23,6 +23,8 @@ import { useApp, useUser } from "@realm/react";
 import useLocation from "../../../services/location";
 import { checkStatusAsync } from "../../../services/background";
 import realmManager from "../../../services/realm/manager";
+import * as Notifications from "expo-notifications";
+import { requestNotificationPermission } from "../../../services/notification";
 
 interface HomeProps {
   navigation: any;
@@ -32,6 +34,7 @@ interface HomeProps {
 interface Permissions {
   location: boolean;
   bluetooth: boolean;
+  notification: boolean;
 }
 
 export function Home({ navigation, route }: HomeProps) {
@@ -55,6 +58,7 @@ export function Home({ navigation, route }: HomeProps) {
   const [permissions, setPermissions] = useState<Permissions>({
     location: false,
     bluetooth: false,
+    notification: false,
   });
 
   const syncData = useCallback(async () => {
@@ -93,7 +97,16 @@ export function Home({ navigation, route }: HomeProps) {
         }
       })
       .catch((err) => console.log(err));
-      syncData()
+    requestNotificationPermission()
+      .then((response) => {
+        if (response) {
+          setPermissions((prev) => ({ ...prev, notification: true }));
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    syncData();
   }, []);
 
   useEffect(() => {

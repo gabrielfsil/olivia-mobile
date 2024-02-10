@@ -17,6 +17,13 @@
           ],
           "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/favicon.png",
+          "color": "#ffffff"
+        }
       ]
     ],
     "splash": {
@@ -43,7 +50,7 @@
         "android.permission.BLUETOOTH_CONNECT"
       ],
       "package": "com.anonymous.oliviamobile",
-      "versionCode": 8
+      "versionCode": 9
     },
     "web": {
       "favicon": "./assets/favicon.png"

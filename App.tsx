@@ -15,6 +15,7 @@ import { Login } from "./src/screens/Public/Login";
 import { LoadingIndicator } from "./src/screens/Public/LoadingIndicator";
 import { LogError } from "./src/databases/schemas/LogError";
 import "./src/services/background";
+import "./src/services/notification";
 import { realmConfig } from "./src/databases";
 
 export default function App() {

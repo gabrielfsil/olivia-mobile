@@ -8,6 +8,7 @@ import {
   NativeDevice,
 } from "react-native-ble-plx";
 import Realm from "realm";
+import * as Notifications from "expo-notifications";
 
 import * as ExpoDevice from "expo-device";
 
@@ -348,7 +349,6 @@ function useBLE(): BluetoothLowEnergyApi {
   const onHeartRateUpdate = useCallback(
     async (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) {
-      
         Alert.alert(
           "Erro ao ler o BPM",
           "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
@@ -360,6 +360,14 @@ function useBLE(): BluetoothLowEnergyApi {
           ]
         );
         try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Dispositivo Desconectado",
+              body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+            },
+            trigger: null,
+          });
+
           if (!realm.isClosed) {
             realm.write(async () => {
               realm.create("LogErrors", {
@@ -403,6 +411,13 @@ function useBLE(): BluetoothLowEnergyApi {
           [{ text: "OK", onPress: () => {} }]
         );
         try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Dispositivo Desconectado",
+              body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+            },
+            trigger: null,
+          });
           if (!realm.isClosed) {
             realm.write(async () => {
               realm.create("LogErrors", {
@@ -507,6 +522,13 @@ function useBLE(): BluetoothLowEnergyApi {
       device.onDisconnected((error, device) => {
         if (error) {
           try {
+            Notifications.scheduleNotificationAsync({
+              content: {
+                title: "Dispositivo Desconectado",
+                body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+              },
+              trigger: null,
+            });
             if (!realm.isClosed) {
               realm.write(async () => {
                 realm.create("LogErrors", {
@@ -578,7 +600,6 @@ const onHeartRateUpdate = async (
   characteristic: Characteristic | null
 ) => {
   if (error) {
-   
     Alert.alert(
       "Erro ao ler o BPM",
       "Aconteceu um erro ao ler o BPM, desconecte e conecte o dispositivo novamente",
@@ -590,6 +611,13 @@ const onHeartRateUpdate = async (
       ]
     );
     try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Dispositivo Desconectado",
+          body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+        },
+        trigger: null,
+      });
       const realmInstance = await realmManager.getRealmInstance();
       const userInstance = userManager.getUser();
 
@@ -614,6 +642,13 @@ const onHeartRateUpdate = async (
       [{ text: "OK", onPress: () => {} }]
     );
     try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Dispositivo Desconectado",
+          body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+        },
+        trigger: null,
+      });
       const realmInstance = await realmManager.getRealmInstance();
       const userInstance = userManager.getUser();
 
@@ -680,6 +715,13 @@ const startStreamingData = (device: Device) => {
     device.onDisconnected((error, device) => {
       if (error) {
         try {
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Dispositivo Desconectado",
+              body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+            },
+            trigger: null,
+          });
           realmManager
             .getRealmInstance()
             .then((realmInstance) => {
