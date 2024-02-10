@@ -50,7 +50,7 @@
         "android.permission.BLUETOOTH_CONNECT"
       ],
       "package": "com.anonymous.oliviamobile",
-      "versionCode": 9
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"
