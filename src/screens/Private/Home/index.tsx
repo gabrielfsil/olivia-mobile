@@ -179,20 +179,32 @@ export function Home({ navigation, route }: HomeProps) {
             <TextForgetButton>Esquecer dispositivo</TextForgetButton>
           </ForgetButton>
         )}
-        <PrimaryButton
-          onPress={async () => {
-            if (isConnected && device !== null) {
+        {isConnected && device !== null && (
+          <PrimaryButton
+            onPress={async () => {
               await disconnectFromDevice(device);
-            } else if (device !== null) {
+            }}
+            text={"Desconectar"}
+          />
+        )}
+        {!isConnected && device !== null && (
+          <PrimaryButton
+            onPress={async () => {
               setLoading(true);
               await connectToDevice(device);
               setLoading(false);
-            } else {
+            }}
+            text={"Reiniciar Conexão"}
+          />
+        )}
+        {!isConnected && device === null && (
+          <PrimaryButton
+            onPress={async () => {
               navigation.navigate("ListDevices");
-            }
-          }}
-          text={isConnected ? "Reiniciar Conexão" : "Conectar"}
-        />
+            }}
+            text={"Conectar"}
+          />
+        )}
       </Content>
     </Container>
   );

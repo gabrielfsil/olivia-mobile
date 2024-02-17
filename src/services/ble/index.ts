@@ -360,14 +360,15 @@ function useBLE(): BluetoothLowEnergyApi {
           ]
         );
         try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Dispositivo Desconectado",
-              body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
-            },
-            trigger: null,
-          });
-
+          if (error.message.match("disconnected")) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "Dispositivo Desconectado",
+                body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+              },
+              trigger: null,
+            });
+          }
           if (!realm.isClosed) {
             realm.write(async () => {
               realm.create("LogErrors", {
@@ -411,13 +412,6 @@ function useBLE(): BluetoothLowEnergyApi {
           [{ text: "OK", onPress: () => {} }]
         );
         try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Dispositivo Desconectado",
-              body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
-            },
-            trigger: null,
-          });
           if (!realm.isClosed) {
             realm.write(async () => {
               realm.create("LogErrors", {
@@ -611,13 +605,15 @@ const onHeartRateUpdate = async (
       ]
     );
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Dispositivo Desconectado",
-          body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
-        },
-        trigger: null,
-      });
+      if (error.message.match("disconnected")) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Dispositivo Desconectado",
+            body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
+          },
+          trigger: null,
+        });
+      }
       const realmInstance = await realmManager.getRealmInstance();
       const userInstance = userManager.getUser();
 
@@ -642,13 +638,6 @@ const onHeartRateUpdate = async (
       [{ text: "OK", onPress: () => {} }]
     );
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Dispositivo Desconectado",
-          body: "A pulseria desconectou do aplicativo, acesse o aplicativo e reinicie a conexão para continuar o monitoramento",
-        },
-        trigger: null,
-      });
       const realmInstance = await realmManager.getRealmInstance();
       const userInstance = userManager.getUser();
 
