@@ -1,40 +1,15 @@
-import NetInfo from "@react-native-community/netinfo";
-import { connectToDevice, createDevice } from "../ble";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as TaskManager from "expo-task-manager";
 import * as BackgroundFetch from "expo-background-fetch";
-import realmManager from "../realm/manager";
+import { connectionAndMonitoringService } from "./tasks/ConnectionAndMonitoringService";
+import { updateModelFileService } from "./tasks/UpdateModelFileService";
+import { predictHeartBeatService } from "./tasks/PredictHeartBeatService";
 
-const BACKGROUND_FETCH_TASK = "BackgroundServiceConnectionAndMonitoring";
+const BACKGROUND_CONNECTION_MONITORING =
+  "BackgroundServiceConnectionAndMonitoring";
 
-const backgroundServiceConnectionAndMonitoring = async () => {
- 
-  const state = await NetInfo.fetch();
-
-  if (state.isConnected) {
-    await realmManager.refreshToken();
-
-    await realmManager.syncData();
-  }
-
-  const deviceStorage = await AsyncStorage.getItem("@olivia:device");
-
-  if (deviceStorage) {
-    const device = createDevice(JSON.parse(deviceStorage));
-
-    if (device) {
-      const connected = await device.isConnected();
-
-      if (!connected) {
-        await connectToDevice(device);
-      }
-    }
-  }
-};
-
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+TaskManager.defineTask(BACKGROUND_CONNECTION_MONITORING, async () => {
   try {
-    await backgroundServiceConnectionAndMonitoring();
+    await connectionAndMonitoringService();
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (err) {
@@ -42,23 +17,58 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   }
 });
 
+// const BACKGROUND_UPDATE_MODEL = "BackgroundServiceUpdateModel";
+
+// TaskManager.defineTask(BACKGROUND_UPDATE_MODEL, async () => {
+//   try {
+//     await updateModelFileService();
+
+//     return BackgroundFetch.BackgroundFetchResult.NewData;
+//   } catch (err) {
+//     return BackgroundFetch.BackgroundFetchResult.Failed;
+//   }
+// });
+
+// const BACKGROUND_PREDICT_HEART_BEAT = "BackgroundServicePredictHeartBeat";
+
+// TaskManager.defineTask(BACKGROUND_PREDICT_HEART_BEAT, async () => {
+//   try {
+//     await predictHeartBeatService();
+
+//     return BackgroundFetch.BackgroundFetchResult.NewData;
+//   } catch (err) {
+//     return BackgroundFetch.BackgroundFetchResult.Failed;
+//   }
+// });
+
 export async function registerBackgroundFetchAsync() {
-  return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-    minimumInterval: 5,
+  await BackgroundFetch.registerTaskAsync(BACKGROUND_CONNECTION_MONITORING, {
+    minimumInterval: 60 * 5,
     stopOnTerminate: false,
     startOnBoot: true,
   });
+
+  // await BackgroundFetch.registerTaskAsync(BACKGROUND_UPDATE_MODEL, {
+  //   minimumInterval: 60 * 60 * 24 * 7,
+  //   stopOnTerminate: false,
+  //   startOnBoot: true,
+  // });
+
+  // await BackgroundFetch.registerTaskAsync(BACKGROUND_PREDICT_HEART_BEAT, {
+  //   minimumInterval: 10,
+  //   stopOnTerminate: false,
+  //   startOnBoot: true,
+  // });
 }
 
 export async function checkStatusAsync() {
-  
   const isRegistered = await TaskManager.isTaskRegisteredAsync(
-    BACKGROUND_FETCH_TASK
+    BACKGROUND_CONNECTION_MONITORING
   );
 
   await TaskManager.getRegisteredTasksAsync();
 
   if (!isRegistered) {
     await registerBackgroundFetchAsync();
-  } 
+  }
 }

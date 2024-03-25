@@ -23,8 +23,8 @@ import { useApp, useUser } from "@realm/react";
 import useLocation from "../../../services/location";
 import { checkStatusAsync } from "../../../services/background";
 import realmManager from "../../../services/realm/manager";
-import * as Notifications from "expo-notifications";
 import { requestNotificationPermission } from "../../../services/notification";
+import { predictHeartBeatService } from "../../../services/background/tasks/PredictHeartBeatService";
 
 interface HomeProps {
   navigation: any;
@@ -82,31 +82,28 @@ export function Home({ navigation, route }: HomeProps) {
     }
   }, [isConnected, device]);
 
+  const requestPermissionsAndConnect = useCallback(async () => {
+    try {
+      await requestPermissions();
+
+      await requestLocationsPermissions();
+
+      await requestNotificationPermission();
+
+      setPermissions((prev) => ({
+        ...prev,
+        bluetooth: true,
+        notification: true,
+        location: true,
+      }));
+      await updateContext();
+      monitorLocation();
+      await syncData();
+    } catch (err) {}
+  }, []);
+
   useEffect(() => {
-    requestPermissions().then((response) => {
-      if (response) {
-        setPermissions((prev) => ({ ...prev, bluetooth: true }));
-        updateContext();
-      }
-    });
-    requestLocationsPermissions()
-      .then((response) => {
-        if (response) {
-          monitorLocation();
-          setPermissions((prev) => ({ ...prev, location: true }));
-        }
-      })
-      .catch((err) => console.log(err));
-    requestNotificationPermission()
-      .then((response) => {
-        if (response) {
-          setPermissions((prev) => ({ ...prev, notification: true }));
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    syncData();
+    requestPermissionsAndConnect();
   }, []);
 
   useEffect(() => {

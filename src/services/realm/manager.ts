@@ -4,6 +4,8 @@ import { HeartBeat } from "../../databases/schemas/HeartBeat";
 import { Position } from "../../databases/schemas/Position";
 import axios from "axios";
 import { LogError } from "../../databases/schemas/LogError";
+import { Execution } from "../../databases/schemas/Execution";
+import userManager from "../user/manager";
 
 interface IUpdateToken {
   access_token: string | null;
@@ -32,6 +34,62 @@ class RealmManager {
     this.refresh_token = refresh_token;
   }
 
+  getLastExecution() {
+    const userInstance = userManager.getUser();
+    if (userInstance) {
+      return this.realmInstance
+        .objects(Execution)
+        .filtered("user_id == $0", [userInstance._id])
+        .sorted("created_at", true)
+        .slice(0, 1)[0];
+    }
+    return undefined;
+  }
+
+  getHeartBeats(startCreatedAt: Date) {
+    const userInstance = userManager.getUser();
+    if (userInstance) {
+      const userId = new Realm.BSON.ObjectId(userInstance._id);
+      return this.realmInstance
+        .objects(HeartBeat)
+        .filtered("user_id == $0", [userId])
+        .filtered("created_at >= $0", [startCreatedAt])
+        .sorted("created_at", true);
+    }
+
+    return [];
+  }
+
+  getPositions() {
+    const userInstance = userManager.getUser();
+    if (userInstance) {
+      const userId = new Realm.BSON.ObjectId(userInstance._id);
+      return this.realmInstance
+        .objects(Position)
+        .filtered("user_id == $0", [userId])
+        .sorted("created_at", true)
+        .slice(0, 20);
+    }
+
+    return [];
+  }
+
+  async saveExecution(last: number) {
+    const realmInstance = await this.getRealmInstance();
+    const userInstance = userManager.getUser();
+
+    if (realmInstance && userInstance) {
+      realmInstance.write(async () => {
+        realmInstance.create("Executions", {
+          _id: new Realm.BSON.ObjectId(),
+          user_id: new Realm.BSON.ObjectId(userInstance._id),
+          value: last + 1,
+          created_at: new Date(),
+        });
+      });
+    }
+  }
+
   async getRealmInstance() {
     if (this.access_token && this.user) {
       const app = new Realm.App({ id: "olivia-yeuiz" });
@@ -44,6 +102,7 @@ class RealmManager {
               subs.add(realm.objects(HeartBeat));
               subs.add(realm.objects(Position));
               subs.add(realm.objects(LogError));
+              subs.add(realm.objects(Execution));
             },
           },
           user: app.currentUser,

@@ -17,6 +17,7 @@ import { LogError } from "./src/databases/schemas/LogError";
 import "./src/services/background";
 import "./src/services/notification";
 import { realmConfig } from "./src/databases";
+import { Execution } from "./src/databases/schemas/Execution";
 
 export default function App() {
 
@@ -39,6 +40,7 @@ export default function App() {
                       subs.add(realm.objects(HeartBeat));
                       subs.add(realm.objects(Position));
                       subs.add(realm.objects(LogError));
+                      subs.add(realm.objects(Execution));
                     },
                   },
                 }}

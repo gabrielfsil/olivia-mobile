@@ -1,6 +1,3 @@
+function readModel(model: string) {}
 
-function writeModel(model: any) {}
-
-function readModel() {}
-
-function updateModel() {}
+function writeModel(newModel: string, oldModel?: string) {}
