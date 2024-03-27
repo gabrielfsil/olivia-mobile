@@ -66,19 +66,23 @@ export function Home({ navigation, route }: HomeProps) {
   }, []);
 
   const reconnectToDevice = useCallback(async () => {
-    if (!isConnected && device) {
-      if (device) {
-        const connected = await device.isConnected();
+    try {
+      if (!isConnected && device) {
+        if (device) {
+          const connected = await device.isConnected();
 
-        if (!connected) {
-          await connectToDevice(device);
-        } else {
-          dispatch({
-            type: "SET_CONNECTED",
-            payload: true,
-          });
+          if (!connected) {
+            await connectToDevice(device);
+          } else {
+            dispatch({
+              type: "SET_CONNECTED",
+              payload: true,
+            });
+          }
         }
       }
+    } catch (err) {
+      console.log(err);
     }
   }, [isConnected, device]);
 
@@ -99,7 +103,9 @@ export function Home({ navigation, route }: HomeProps) {
       await updateContext();
       monitorLocation();
       await syncData();
-    } catch (err) {}
+    } catch (err) {
+      console.log(err);
+    }
   }, []);
 
   useEffect(() => {

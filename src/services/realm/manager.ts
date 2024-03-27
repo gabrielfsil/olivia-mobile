@@ -143,9 +143,8 @@ class RealmManager {
   async syncData() {
     try {
       const realm = await this.getRealmInstance();
-      console.log("Iniciando sincronização...");
+
       await realm?.syncSession?.uploadAllLocalChanges();
-      console.log("Concluído");
     } catch (err) {
       console.log("Erro na sincronização: ", err);
     }

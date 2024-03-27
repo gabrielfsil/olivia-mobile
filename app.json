@@ -36,7 +36,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.oliviamobile"
+      "bundleIdentifier": "br.app.olivia"
     },
     "android": {
       "icon": "./assets/icon.png",
@@ -49,8 +49,8 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
       ],
-      "package": "com.anonymous.oliviamobile",
-      "versionCode": 12
+      "package": "br.app.olivia",
+      "versionCode": 13
     },
     "web": {
       "favicon": "./assets/favicon.png"

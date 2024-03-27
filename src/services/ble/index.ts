@@ -398,7 +398,6 @@ function useBLE(): BluetoothLowEnergyApi {
               .catch((err: any) => {
                 console.log("Error To Reopen: ", err);
               });
-            console.log("Error: Realm has been closed");
           }
         } catch (e) {
           console.log("BLE Error:", e);
@@ -441,7 +440,6 @@ function useBLE(): BluetoothLowEnergyApi {
               .catch((err: any) => {
                 console.log("Error To Reopen: ", err);
               });
-            console.log("Error: Realm has been closed");
           }
         } catch (e) {
           console.log("BLE Error:", e);
@@ -491,7 +489,6 @@ function useBLE(): BluetoothLowEnergyApi {
               });
             });
           }
-          console.log("Error: Realm has been closed");
         }
       } catch (e) {
         console.log("Error To Insert:", e);
@@ -552,7 +549,6 @@ function useBLE(): BluetoothLowEnergyApi {
                 .catch((err: any) => {
                   console.log("Error To Reopen: ", err);
                 });
-              console.log("Error: Realm has been closed");
             }
           } catch (e) {
             console.log("Error: ", error);

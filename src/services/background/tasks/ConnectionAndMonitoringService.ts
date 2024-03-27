@@ -4,26 +4,30 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import realmManager from "../../realm/manager";
 
 const connectionAndMonitoringService = async () => {
-  const state = await NetInfo.fetch();
+  try {
+    const state = await NetInfo.fetch();
 
-  if (state.isConnected) {
-    await realmManager.refreshToken();
+    if (state.isConnected) {
+      await realmManager.refreshToken();
 
-    await realmManager.syncData();
-  }
+      await realmManager.syncData();
+    }
 
-  const deviceStorage = await AsyncStorage.getItem("@olivia:device");
+    const deviceStorage = await AsyncStorage.getItem("@olivia:device");
 
-  if (deviceStorage) {
-    const device = createDevice(JSON.parse(deviceStorage));
+    if (deviceStorage) {
+      const device = createDevice(JSON.parse(deviceStorage));
 
-    if (device) {
-      const connected = await device.isConnected();
+      if (device) {
+        const connected = await device.isConnected();
 
-      if (!connected) {
-        await connectToDevice(device);
+        if (!connected) {
+          await connectToDevice(device);
+        }
       }
     }
+  } catch (err) {
+    console.log(err);
   }
 };
 

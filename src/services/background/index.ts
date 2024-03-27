@@ -1,8 +1,6 @@
 import * as TaskManager from "expo-task-manager";
 import * as BackgroundFetch from "expo-background-fetch";
 import { connectionAndMonitoringService } from "./tasks/ConnectionAndMonitoringService";
-import { updateModelFileService } from "./tasks/UpdateModelFileService";
-import { predictHeartBeatService } from "./tasks/PredictHeartBeatService";
 
 const BACKGROUND_CONNECTION_MONITORING =
   "BackgroundServiceConnectionAndMonitoring";
@@ -43,7 +41,7 @@ TaskManager.defineTask(BACKGROUND_CONNECTION_MONITORING, async () => {
 
 export async function registerBackgroundFetchAsync() {
   await BackgroundFetch.registerTaskAsync(BACKGROUND_CONNECTION_MONITORING, {
-    minimumInterval: 60 * 5,
+    minimumInterval: 5,
     stopOnTerminate: false,
     startOnBoot: true,
   });
@@ -62,13 +60,17 @@ export async function registerBackgroundFetchAsync() {
 }
 
 export async function checkStatusAsync() {
-  const isRegistered = await TaskManager.isTaskRegisteredAsync(
-    BACKGROUND_CONNECTION_MONITORING
-  );
+  try {
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(
+      BACKGROUND_CONNECTION_MONITORING
+    );
 
-  await TaskManager.getRegisteredTasksAsync();
+    await TaskManager.getRegisteredTasksAsync();
 
-  if (!isRegistered) {
-    await registerBackgroundFetchAsync();
+    if (!isRegistered) {
+      await registerBackgroundFetchAsync();
+    }
+  } catch (err) {
+    console.log(err);
   }
 }
